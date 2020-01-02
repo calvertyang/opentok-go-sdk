@@ -142,10 +142,14 @@ err := ot.DeleteProject("<PROJECT_API_KEY>")
 Use this method to get a project details record describing the project (or to get the records for all projects).
 
 ```go
-project, err := ot.GetProjectInfo("<PROJECT_API_KEY>")
+// Get all projects information
+projects, err := ot.GetProjectInfo("")
+
+// Get a project information with specific project API key
+projects, err := ot.GetProjectInfo("<PROJECT_API_KEY>")
 ```
 
-The response data is a [project details object](#project-details-object).
+The response data is an array of [project details object](#project-details-object).
 
 #### Generating a new project API secret
 
@@ -186,16 +190,30 @@ type Session struct {
 type Project struct {
 	// The OpenTok project API key
 	Id string
+	// The OpenTok account id
+	UserId int
 	// The OpenTok project API secret
 	Secret string
-	// Whether the project is active ("ACTIVE") or suspended ("SUSPENDED").
+	// Whether the project is active ("VALID", "ACTIVE") or suspended ("SUSPENDED").
 	Status string
+	// The OpenTok account status
+	UserStatus string
 	// The name, if you specified one when creating the project; or an empty string if you did not specify a name
 	Name string
-	// This is set to "standard" or "enterprise", and it refers to the environment a project is running on.
-	Environment string
+	// The OpenTok account email
+	ContactEmail string
 	// The time at which the project was created (a UNIX timestamp, in milliseconds)
 	CreatedAt int
+	// The time at which the project was updated (a UNIX timestamp, in milliseconds)
+	UpdatedAt int
+	// The environment id that project is running on
+	EnvironmentId int
+	// The environment name that project is running on
+	EnvironmentName string
+	// The environment description that project is running on
+	EnvironmentDescription string
+	// The OpenTok project API key
+	ApiKey string
 }
 ```
 

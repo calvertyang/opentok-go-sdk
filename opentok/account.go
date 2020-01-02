@@ -23,12 +23,19 @@ const (
 )
 
 type Project struct {
-	Id          string `json:"id"`          // The OpenTok project API key
-	Secret      string `json:"secret"`      // The OpenTok project API secret
-	Status      string `json:"status"`      // Whether the project is active ("ACTIVE") or suspended ("SUSPENDED").
-	Name        string `json:"name"`        // The name, if you specified one when creating the project; or an empty string if you did not specify a name
-	Environment string `json:"environment"` // This is set to "standard" or "enterprise", and it refers to the environment a project is running on.
-	CreatedAt   int    `json:"createdAt"`   // The time at which the project was created (a UNIX timestamp, in milliseconds)
+	Id                     string `json:"id"`                     // The OpenTok project API key
+	UserId                 int    `json:"userId"`                 // The OpenTok account id
+	Secret                 string `json:"secret"`                 // The OpenTok project API secret
+	Status                 string `json:"status"`                 // Whether the project is active ("VALID", "ACTIVE") or suspended ("SUSPENDED").
+	UserStatus             string `json:"userStatus"`             // The OpenTok account status
+	Name                   string `json:"name"`                   // The name, if you specified one when creating the project; or an empty string if you did not specify a name
+	ContactEmail           string `json:"contactEmail"`           // The OpenTok account email
+	CreatedAt              int    `json:"createdAt"`              // The time at which the project was created (a UNIX timestamp, in milliseconds)
+	UpdatedAt              int    `json:"updatedAt"`              // The time at which the project was updated (a UNIX timestamp, in milliseconds)
+	EnvironmentId          int    `json:"environmentId"`          // The environment id that project is running on
+	EnvironmentName        string `json:"environmentName"`        // The environment name that project is running on
+	EnvironmentDescription string `json:"environmentDescription"` // The environment description that project is running on
+	ApiKey                 string `json:"apiKey"`                 // The OpenTok project API key
 }
 
 /**
@@ -81,18 +88,18 @@ func (ot *OpenTok) CreateProject(projectName string) (*Project, error) {
 /**
  * Use this method to get a project details record describing the project (or to get the records for all projects).
  */
-func (ot *OpenTok) GetProjectInfo(projectApiKey string) (*Project, error) {
-	if projectApiKey == "" {
-		return nil, fmt.Errorf("Cannot get project information without a project API key")
-	}
-
+func (ot *OpenTok) GetProjectInfo(projectApiKey string) (*[]Project, error) {
 	//Create jwt token
 	jwt, err := ot.jwtToken(accountToken)
 	if err != nil {
 		return nil, err
 	}
 
-	endpoint := fmt.Sprintf("%s%s/%s", apiHost, projectURL, projectApiKey)
+	endpoint := fmt.Sprintf("%s%s", apiHost, projectURL)
+	if projectApiKey != "" {
+		endpoint = fmt.Sprintf("%s/%s", endpoint, projectApiKey)
+	}
+
 	req, err := http.NewRequest("GET", endpoint, nil)
 	if err != nil {
 		return nil, err
@@ -111,12 +118,25 @@ func (ot *OpenTok) GetProjectInfo(projectApiKey string) (*Project, error) {
 		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
 	}
 
-	project := &Project{}
-	if err = json.NewDecoder(res.Body).Decode(project); err != nil {
-		return nil, err
-	}
+	if projectApiKey != "" {
+		// return specific project information
+		project := Project{}
+		if err = json.NewDecoder(res.Body).Decode(&project); err != nil {
+			return nil, err
+		}
 
-	return project, nil
+		projects := []Project{project}
+
+		return &projects, nil
+	} else {
+		// return all projects information
+		projects := []Project{}
+		if err = json.NewDecoder(res.Body).Decode(&projects); err != nil {
+			return nil, err
+		}
+
+		return &projects, nil
+	}
 }
 
 /**
