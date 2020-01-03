@@ -85,8 +85,8 @@ func (ot *OpenTok) GenerateToken(sessionId string, opts TokenOptions) (*string, 
 	rand.Seed(time.Now().UTC().UnixNano())
 	tokenData := map[string]string{
 		"session_id":                sessionId,
-		"create_time":               fmt.Sprintf("%d", now.Unix()),
-		"expire_time":               fmt.Sprintf("%d", now.Add(24*time.Hour).Unix()),
+		"create_time":               strconv.FormatInt(now.Unix(), 10),
+		"expire_time":               strconv.FormatInt(now.Add(24*time.Hour).Unix(), 10),
 		"nonce":                     fmt.Sprintf("%v", rand.Float64()),
 		"role":                      "publisher",
 		"connection_data":           "",
@@ -102,7 +102,7 @@ func (ot *OpenTok) GenerateToken(sessionId string, opts TokenOptions) (*string, 
 	}
 
 	if opts.ExpireTime > 0 {
-		tokenData["expire_time"] = fmt.Sprintf("%v", opts.ExpireTime)
+		tokenData["expire_time"] = strconv.Itoa(opts.ExpireTime)
 	}
 
 	if len(opts.InitialLayoutClassList) > 0 {
@@ -215,8 +215,8 @@ func encodeToken(tokenData map[string]string, ot *OpenTok) (*string, error) {
 	}
 
 	sig := fmt.Sprintf("%x:%s", h.Sum(nil), dataString)
-	decoded := fmt.Sprintf("partner_id=%s&sig=%s", ot.apiKey, sig)
-	token := fmt.Sprintf("%v%s", TOKEN_SENTINEL, base64.StdEncoding.EncodeToString([]byte(decoded)))
+	decoded := "partner_id=" + ot.apiKey + "&sig=" + sig
+	token := TOKEN_SENTINEL + base64.StdEncoding.EncodeToString([]byte(decoded))
 
 	return &token, nil
 }

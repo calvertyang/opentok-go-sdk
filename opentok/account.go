@@ -55,7 +55,7 @@ func (ot *OpenTok) CreateProject(projectName string) (*Project, error) {
 		return nil, err
 	}
 
-	endpoint := fmt.Sprintf("%s%s", apiHost, projectURL)
+	endpoint := apiHost + projectURL
 	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return nil, err
@@ -95,11 +95,10 @@ func (ot *OpenTok) GetProjectInfo(projectApiKey string) (*[]Project, error) {
 		return nil, err
 	}
 
-	endpoint := fmt.Sprintf("%s%s", apiHost, projectURL)
+	endpoint := apiHost + projectURL
 	if projectApiKey != "" {
-		endpoint = fmt.Sprintf("%s/%s", endpoint, projectApiKey)
+		endpoint += "/" + projectApiKey
 	}
-
 	req, err := http.NewRequest("GET", endpoint, nil)
 	if err != nil {
 		return nil, err
@@ -161,7 +160,7 @@ func (ot *OpenTok) ChangeProjectStatus(projectApiKey string, projectStatus Proje
 		return nil, err
 	}
 
-	endpoint := fmt.Sprintf("%s%s/%s", apiHost, projectURL, projectApiKey)
+	endpoint := apiHost + projectURL + "/" + projectApiKey
 	req, err := http.NewRequest("PUT", endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return nil, err
@@ -203,7 +202,7 @@ func (ot *OpenTok) RefreshProjectSecret(projectApiKey string) (*Project, error) 
 		return nil, err
 	}
 
-	endpoint := fmt.Sprintf("%s%s/%s/refreshSecret", apiHost, projectURL, projectApiKey)
+	endpoint := apiHost + projectURL + "/" + projectApiKey + "/refreshSecret"
 	req, err := http.NewRequest("POST", endpoint, nil)
 	if err != nil {
 		return nil, err
@@ -244,7 +243,7 @@ func (ot *OpenTok) DeleteProject(projectApiKey string) error {
 		return err
 	}
 
-	endpoint := fmt.Sprintf("%s%s/%s", apiHost, projectURL, projectApiKey)
+	endpoint := apiHost + projectURL + "/" + projectApiKey
 	req, err := http.NewRequest("DELETE", endpoint, nil)
 	if err != nil {
 		return err
