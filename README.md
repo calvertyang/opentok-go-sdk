@@ -83,7 +83,7 @@ token, err := session.GenerateToken(opentok.TokenOptions{
   Role:                   "moderator",
   ExpireTime:             time.Now().UTC().Add(7 * 24 * time.Hour).Unix(), // in one week
   Data:                   "name=Johnny",
-  InitialLayoutClassList: ["focus"],
+  InitialLayoutClassList: []string{"focus"},
 })
 ```
 
