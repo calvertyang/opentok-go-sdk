@@ -44,9 +44,7 @@ type Project struct {
 func (ot *OpenTok) CreateProject(projectName string) (*Project, error) {
 	jsonStr := []byte{}
 	if projectName != "" {
-		jsonStr, _ = json.Marshal(map[string]string{
-			"name": projectName,
-		})
+		jsonStr = []byte(`{ "name": "` + projectName + `" }`)
 	}
 
 	//Create jwt token
@@ -150,9 +148,7 @@ func (ot *OpenTok) ChangeProjectStatus(projectApiKey string, projectStatus Proje
 		return nil, fmt.Errorf("Project status cannot be changed without a valid project status")
 	}
 
-	jsonStr, _ := json.Marshal(map[string]string{
-		"status": string(projectStatus),
-	})
+	jsonStr := []byte(`{ "status": "` + projectStatus + `" }`)
 
 	//Create jwt token
 	jwt, err := ot.jwtToken(accountToken)
