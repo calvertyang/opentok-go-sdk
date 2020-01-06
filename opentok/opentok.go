@@ -19,17 +19,36 @@ const apiHost = "https://api.opentok.com"
 
 const TOKEN_SENTINEL = "T1=="
 
-type IssueType string
+type issueType string
 
 const (
 	/**
 	 * For most REST API calls, set issue type to "project"
 	 */
-	projectToken IssueType = "project"
+	projectToken issueType = "project"
 	/**
 	 * For Account Management REST methods, set issue type to "account"
 	 */
-	accountToken IssueType = "account"
+	accountToken issueType = "account"
+)
+
+type Role string
+
+const (
+	/**
+	 * A publisher can publish streams, subscribe to streams, and signal.
+	 */
+	Publisher Role = "publisher"
+	/**
+	 * A subscriber can only subscribe to streams.
+	 */
+	Subscriber Role = "subscriber"
+	/**
+	 * In addition to the privileges granted to a publisher, in clients using
+	 * the OpenTok.js library, a moderator can call the forceUnpublish() and
+	 * forceDisconnect() method of the Session object.
+	 */
+	Moderator Role = "moderator"
 )
 
 type OpenTok struct {
@@ -38,7 +57,7 @@ type OpenTok struct {
 }
 
 type TokenOptions struct {
-	Role                   string
+	Role                   Role
 	Data                   string
 	ExpireTime             int
 	InitialLayoutClassList []string
@@ -48,22 +67,6 @@ type SessionIdInfo struct {
 	ApiKey     string
 	Location   string
 	CreateTime time.Time
-}
-
-var roles = map[string]string{
-	/**
-	 * Subscribers can only subscribe to streams in the session (they cannot publish)
-	 */
-	"subscriber": "subscriber",
-	/**
-	 * Publishers can subscribe and publish streams to the session, and they can use the signaling API
-	 */
-	"publisher": "publisher",
-	/**
-	 * Moderators have the privileges of publishers and, in addition,
-	 * they can also force other users to disconnect from the session or to cease publishing
-	 */
-	"moderator": "moderator",
 }
 
 func New(apiKey, apiSecret string) *OpenTok {
@@ -88,7 +91,7 @@ func (ot *OpenTok) GenerateToken(sessionId string, opts TokenOptions) (*string, 
 		"create_time":               strconv.FormatInt(now.Unix(), 10),
 		"expire_time":               strconv.FormatInt(now.Add(24*time.Hour).Unix(), 10),
 		"nonce":                     fmt.Sprintf("%v", rand.Float64()),
-		"role":                      "publisher",
+		"role":                      string(Publisher),
 		"connection_data":           "",
 		"initial_layout_class_list": "",
 	}
@@ -110,7 +113,7 @@ func (ot *OpenTok) GenerateToken(sessionId string, opts TokenOptions) (*string, 
 	}
 
 	// validate tokenData
-	if roles[tokenData["role"]] == "" {
+	if tokenData["role"] != string(Publisher) && tokenData["role"] != string(Subscriber) && tokenData["role"] != string(Moderator) {
 		return nil, fmt.Errorf("Invalid role for token generation: %v", tokenData["role"])
 	}
 
@@ -129,9 +132,9 @@ func (ot *OpenTok) GenerateToken(sessionId string, opts TokenOptions) (*string, 
 	return encodeToken(tokenData, ot)
 }
 
-func (ot *OpenTok) jwtToken(ist IssueType) (string, error) {
+func (ot *OpenTok) jwtToken(ist issueType) (string, error) {
 	type OpenTokClaims struct {
-		Ist IssueType `json:"ist,omitempty"`
+		Ist issueType `json:"ist,omitempty"`
 		jwt.StandardClaims
 	}
 

@@ -80,7 +80,7 @@ token, err := session.GenerateToken(opentok.TokenOptions{})
 
 // Set some options in a Token
 token, err := session.GenerateToken(opentok.TokenOptions{
-  Role:                   "moderator",
+  Role:                   opentok.Moderator,
   ExpireTime:             time.Now().UTC().Add(7 * 24 * time.Hour).Unix(), // in one week
   Data:                   "name=Johnny",
   InitialLayoutClassList: []string{"focus"},
@@ -215,6 +215,76 @@ type Project struct {
 	// The OpenTok project API key
 	ApiKey string
 }
+```
+
+---
+
+### Type Definition
+
+#### Project Status
+
+```go
+const (
+	/**
+	 * Set to ACTIVE to use the project API key.
+	 */
+	ProjectActive ProjectStatus = "ACTIVE"
+	/**
+	 * Set to SUSPENDED, you will not be able to use the project API key (and any OpenTok sessions created with it).
+	 */
+	ProjectSuspended ProjectStatus = "SUSPENDED"
+)
+```
+
+#### Archive Mode
+
+```go
+const (
+	/**
+	 * Set to always to have the session archived automatically.
+	 */
+	AutoArchived ArchiveMode = "always"
+	/**
+	 * Set to manual (the default), you can archive the session by calling the REST /archive POST method
+	 */
+	ManualArchived ArchiveMode = "manual"
+)
+```
+
+#### Media Mode
+
+```go
+const (
+	/**
+	 * Set to enabled if you prefer clients to attempt to send audio-video streams directly to other clients
+	 */
+	Relayed MediaMode = "enabled"
+	/**
+	 * Set to disabled for sessions that use the OpenTok Media Router
+	 */
+	Routed MediaMode = "disabled"
+)
+```
+
+#### Role
+
+```go
+const (
+	/**
+	 * A publisher can publish streams, subscribe to streams, and signal.
+	 */
+	Publisher Role = "publisher"
+	/**
+	 * A subscriber can only subscribe to streams.
+	 */
+	Subscriber Role = "subscriber"
+	/**
+	 * In addition to the privileges granted to a publisher, in clients using
+	 * the OpenTok.js library, a moderator can call the forceUnpublish() and
+	 * forceDisconnect() method of the Session object.
+	 */
+	Moderator Role = "moderator"
+)
 ```
 
 ## Requirements
