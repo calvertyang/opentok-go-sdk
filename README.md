@@ -26,13 +26,21 @@ import "github.com/calvertyang/opentok-go-sdk/opentok"
 ot := opentok.New(apiKey, apiSecret)
 ```
 
+> For most API calls, use the API secret for the specific project in your account.
+>
+> This is provided on the Project page of your [TokBox Account](https://tokbox.com/account/).
+>
+> However, the methods of **account management** are restricted to registered administrators for the OpenTok account.
+>
+> To use these methods, you must use the **account** API key and secret, which is only available to the account administrator,
+
 ---
 
 ### Session creation, signaling, and moderation
 
 #### Creating Sessions
 
-To create an OpenTok Session, use the `OpenTok#CreateSession(options)` method. The `options` parameter is an struct used to specify the following:
+To create an OpenTok Session, use the `OpenTok.CreateSession(options)` method. The `options` parameter is an struct used to specify the following:
 
 * Whether the session uses the [OpenTok Media
   Router](https://tokbox.com/developer/guides/create-session/#media-mode),
@@ -49,18 +57,18 @@ session, err := ot.CreateSession(opentok.SessionOptions{})
 
 // The session will the OpenTok Media Router:
 session, err := ot.CreateSession(opentok.SessionOptions{
-  MediaMode: opentok.Routed,
+	MediaMode: opentok.Routed,
 })
 
 // A Session with a location hint
 session, err := ot.CreateSession(opentok.SessionOptions{
-  Location: "12.34.56.78",
+	Location: "12.34.56.78",
 })
 
 // A Session with an automatic archiving
 session, err := ot.CreateSession(opentok.SessionOptions{
-  ArchiveMode: opentok.AutoArchived,
-  MediaMode:   opentok.Routed,
+	ArchiveMode: opentok.AutoArchived,
+	MediaMode:   opentok.Routed,
 })
 ```
 
@@ -69,7 +77,7 @@ The response data is a [session details object](#session-details-object).
 #### Generating Tokens
 
 Once a Session is created, you can start generating Tokens for clients to use when connecting to it.
-You can generate a token by calling the `Session#GenerateToken(options)` method on the instance after creating it.
+You can generate a token by calling the `OpenTok.GenerateToken(sessionId, options)` method, or by calling the `Session.GenerateToken(options)` method on the instance after creating it.
 
 ```go
 // Generate a Token from just a session_id (fetched from a database)
@@ -80,10 +88,10 @@ token, err := session.GenerateToken(opentok.TokenOptions{})
 
 // Set some options in a Token
 token, err := session.GenerateToken(opentok.TokenOptions{
-  Role:                   opentok.Moderator,
-  ExpireTime:             time.Now().UTC().Add(7 * 24 * time.Hour).Unix(), // in one week
-  Data:                   "name=Johnny",
-  InitialLayoutClassList: []string{"focus"},
+	Role:                   opentok.Moderator,
+	ExpireTime:             time.Now().UTC().Add(7 * 24 * time.Hour).Unix(), // in one week
+	Data:                   "name=Johnny",
+	InitialLayoutClassList: []string{"focus"},
 })
 ```
 
@@ -117,10 +125,10 @@ You can change a project's status from active to suspended and back.
 
 ```go
 // Change the project status to suspended by project API key
-project, err := ot.ChangeProjectStatus("<PROJECT_API_KEY>", opentok.ProjectSuspended)
+project, err := ot.ChangeProjectStatus("PROJECT_API_KEY", opentok.ProjectSuspended)
 
 // Change the project status to active by project API key
-project, err := ot.ChangeProjectStatus("<PROJECT_API_KEY>", opentok.ProjectActive)
+project, err := ot.ChangeProjectStatus("PROJECT_API_KEY", opentok.ProjectActive)
 ```
 
 The response data is a [project details object](#project-details-object).
@@ -134,7 +142,7 @@ You can also temporarily [suspend a project's API key](#changing-the-status-for-
 > **Note:** You can also delete a project on your [TokBox account](https://tokbox.com/account/) page.
 
 ```go
-err := ot.DeleteProject("<PROJECT_API_KEY>")
+err := ot.DeleteProject("PROJECT_API_KEY")
 ```
 
 #### Getting information about projects
@@ -146,7 +154,7 @@ Use this method to get a project details record describing the project (or to ge
 projects, err := ot.GetProjectInfo("")
 
 // Get a project information with specific project API key
-projects, err := ot.GetProjectInfo("<PROJECT_API_KEY>")
+projects, err := ot.GetProjectInfo("PROJECT_API_KEY")
 ```
 
 The response data is an array of [project details object](#project-details-object).
@@ -158,7 +166,7 @@ For security reasons, you may want to generate a new API secret for a project.
 > **Note:** Use the new API secret for all REST API calls and with the OpenTok server-side SDKs. When you generate a new API secret, all existing [client tokens](https://tokbox.com/developer/guides/create-token/) become invalid (and they cannot be used to connect to OpenTok sessions); use the new API secret with the OpenTok server SDK to generate client tokens.
 
 ```go
-project, err := ot.RefreshProjectSecret("<PROJECT_API_KEY>")
+project, err := ot.RefreshProjectSecret("PROJECT_API_KEY")
 ```
 
 The response data is a [project details object](#project-details-object).
@@ -224,6 +232,8 @@ type Project struct {
 #### Project Status
 
 ```go
+type ProjectStatus string
+
 const (
 	/**
 	 * Set to ACTIVE to use the project API key.
@@ -239,6 +249,8 @@ const (
 #### Archive Mode
 
 ```go
+type ArchiveMode string
+
 const (
 	/**
 	 * Set to always to have the session archived automatically.
@@ -254,6 +266,8 @@ const (
 #### Media Mode
 
 ```go
+type MediaMode string
+
 const (
 	/**
 	 * Set to enabled if you prefer clients to attempt to send audio-video streams directly to other clients
@@ -269,6 +283,8 @@ const (
 #### Role
 
 ```go
+type Role string
+
 const (
 	/**
 	 * A publisher can publish streams, subscribe to streams, and signal.
