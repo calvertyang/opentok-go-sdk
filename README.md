@@ -101,8 +101,6 @@ The response data is a string of token.
 
 ### Archiving
 
-#### Starting an archive recording
-
 You can only record archives of sessions that use the OpenTok Media Router (with the media mode set to routed).
 
 You can start the recording of an OpenTok Session using the `OpenTok.StartArchive(sessionId, options)` method. Note that you can only start an Archive on a Session that has clients connected.
@@ -314,6 +312,54 @@ type Project struct {
 	EnvironmentDescription string
 	// The OpenTok project API key
 	ApiKey string
+}
+```
+
+#### Archive Details Object
+
+```go
+type Archive struct {
+	// The time at which the archive was created, in milliseconds since the UNIX epoch.
+	CreatedAt int
+	// The duration of the archive, in milliseconds.
+	Duration int
+	// Whether the archive has an audio track or not.
+	HasAudio bool
+	// Whether the archive has an video track or not.
+	HasVideo bool
+	// The unique archive ID.
+	Id string
+	// The name of the archive.
+	Name *string
+	// The output mode to be generated for this archive.
+	OutputMode ArchiveOutputMode
+	// The API key associated with the archive.
+	ProjectId int
+	// This string describes the reason the archive stopped or failed.
+	Reason string
+	// The resolution of the archive.
+	Resolution ArchiveResolution
+	// The session ID of the OpenTok session associated with this archive.
+	SessionId string
+	// The size of the MP4 file.
+	Size int
+	// The status of the archive.
+	Status string
+	// The download URL of the available MP4 file.
+	Url *string
+	// The instance of OpenTok
+	OpenTok *OpenTok
+}
+```
+
+#### Archive List Details Object
+
+```go
+type ArchiveList struct {
+	// The total number of archives for the API key.
+	Count int
+	// An array of archive defining each archive retrieved.
+	Items []*Archive
 }
 ```
 
