@@ -83,7 +83,7 @@ You can generate a token by calling the `OpenTok.GenerateToken(sessionId, option
 // Generate a Token from just a session_id (fetched from a database)
 token, err := ot.GenerateToken(sessionId, opentok.TokenOptions{})
 
-// Generate a Token from a session object (returned from CreateSession)
+// Generate a Token from a session object (returned from OpenTok.CreateSession)
 token, err := session.GenerateToken(opentok.TokenOptions{})
 
 // Set some options in a Token
@@ -147,14 +147,14 @@ err := ot.DeleteProject("PROJECT_API_KEY")
 
 #### Getting information about projects
 
-Use this method to get a project details record describing the project (or to get the records for all projects).
+Use `OpenTok.GetProject(projectAPIKey)` method to get the project details record describing the project, or use `OpenTok.ListProjects()` method to get the records for all projects.
 
 ```go
 // Get all projects information
-projects, err := ot.GetProjectInfo("")
+projects, err := ot.ListProjects()
 
-// Get a project information with specific project API key
-projects, err := ot.GetProjectInfo("PROJECT_API_KEY")
+// Get the project information with specific project API key
+projects, err := ot.GetProject("PROJECT_API_KEY")
 ```
 
 The response data is an array of [project details object](#project-details-object).

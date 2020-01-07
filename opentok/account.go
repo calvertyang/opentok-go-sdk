@@ -84,9 +84,9 @@ func (ot *OpenTok) CreateProject(projectName string) (*Project, error) {
 }
 
 /**
- * Use this method to get a project details record describing the project (or to get the records for all projects).
+ * Use this method to get the records for all projects.
  */
-func (ot *OpenTok) GetProjectInfo(projectApiKey string) (*[]Project, error) {
+func (ot *OpenTok) ListProjects() ([]*Project, error) {
 	//Create jwt token
 	jwt, err := ot.jwtToken(accountToken)
 	if err != nil {
@@ -94,9 +94,6 @@ func (ot *OpenTok) GetProjectInfo(projectApiKey string) (*[]Project, error) {
 	}
 
 	endpoint := apiHost + projectURL
-	if projectApiKey != "" {
-		endpoint += "/" + projectApiKey
-	}
 	req, err := http.NewRequest("GET", endpoint, nil)
 	if err != nil {
 		return nil, err
@@ -115,25 +112,53 @@ func (ot *OpenTok) GetProjectInfo(projectApiKey string) (*[]Project, error) {
 		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
 	}
 
-	if projectApiKey != "" {
-		// return specific project information
-		project := Project{}
-		if err = json.NewDecoder(res.Body).Decode(&project); err != nil {
-			return nil, err
-		}
-
-		projects := []Project{project}
-
-		return &projects, nil
-	} else {
-		// return all projects information
-		projects := []Project{}
-		if err = json.NewDecoder(res.Body).Decode(&projects); err != nil {
-			return nil, err
-		}
-
-		return &projects, nil
+	projects := []*Project{}
+	if err = json.NewDecoder(res.Body).Decode(&projects); err != nil {
+		return nil, err
 	}
+
+	return projects, nil
+}
+
+/**
+ * Use this method to get a project details record describing the project.
+ */
+func (ot *OpenTok) GetProject(projectApiKey string) (*Project, error) {
+	if projectApiKey == "" {
+		return nil, fmt.Errorf("Cannot get project information without a project API key")
+	}
+
+	//Create jwt token
+	jwt, err := ot.jwtToken(accountToken)
+	if err != nil {
+		return nil, err
+	}
+
+	endpoint := apiHost + projectURL + "/" + projectApiKey
+	req, err := http.NewRequest("GET", endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("X-OPENTOK-AUTH", jwt)
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+	}
+
+	project := &Project{}
+	if err = json.NewDecoder(res.Body).Decode(project); err != nil {
+		return nil, err
+	}
+
+	return project, nil
 }
 
 /**
