@@ -99,6 +99,98 @@ The response data is a string of token.
 
 ---
 
+### Archiving
+
+#### Starting an archive recording
+
+You can only record archives of sessions that use the OpenTok Media Router (with the media mode set to routed).
+
+You can start the recording of an OpenTok Session using the `OpenTok.StartArchive(sessionId, options)` method. Note that you can only start an Archive on a Session that has clients connected.
+
+```go
+// Start an archive
+archive, err := ot.StartArchive(sessionId, opentok.ArchiveOptions{})
+
+// Start a named Archive
+archive, err := ot.StartArchive(sessionId, opentok.ArchiveOptions{
+	Name: "Important Presentation",
+})
+```
+
+You can also disable audio or video recording by setting the `HasAudio` or `HasVideo` property of the `options` parameter to `false`:
+
+```go
+// Start an audio-only Archive
+archive, err := ot.StartArchive(sessionId, opentok.ArchiveOptions{
+	Name:     "Important Presentation",
+	HasVideo: false,
+})
+```
+
+By default, all streams are recorded to a single (composed) file. You can record the different streams in the session to individual files (instead of a single composed file) by setting the `OutputMode` option to `Opentok.Individual` when you call the `OpenTok.StartArchive()` method:
+
+```go
+// Start an Archive with individual output mode
+archive, err := ot.StartArchive(sessionId, opentok.ArchiveOptions{
+	Name:       "Important Presentation",
+	OutputMode: opentok.Individual,
+})
+```
+
+For composed archives you can set the resolution of the archive, either SD ("640x480", the default) or HD ("1280x720").
+
+```go
+// Start an Archive with HD resolution
+archive, err := ot.StartArchive(sessionId, opentok.ArchiveOptions{
+	Name:       "Important Presentation",
+	Resolution: opentok.HD,
+})
+```
+
+You can stop the recording of a started Archive using the `OpenTok.StopArchive(archiveId)` method. You can also do this using the `Archive.Stop()` method on the Archive instance.
+
+```go
+// Stop an Archive from an archiveId (fetched from database)
+result, err := ot.StopArchive(archiveId)
+
+// Stop an Archive from an instance (returned from Opentok.StartArchive)
+result, err := archive.Stop()
+```
+
+To get an `OpenTok.Archive` instance (and all the information about it) from an archiveId, use the `OpenTok.GetArchive(archiveId)` method.
+
+```go
+archive, err := ot.GetArchive(archiveId)
+```
+
+To delete an Archive, you can call the `OpenTok.deleteArchive(archiveId)` method or the `Delete()` method of an `OpenTok.Archive` instance.
+
+```go
+// Delete an Archive from an archiveId (fetched from database)
+err := ot.DeleteArchive(archiveId)
+
+// Delete an Archive from an Archive instance, returned from the OpenTok.StartArchive(),
+// OpenTok.GetArchive(), or OpenTok.ListArchives() methods
+err := archive.Delete()
+```
+
+You can also get a list of all the Archives you've created (up to 1000) with your API Key. This is done using the `OpenTok.ListArchives(options)` method.
+
+```go
+// Paginate through the results via offset by 100 and count by 50
+archives, err := opentok.ListArchives(opentok.ArchiveListOptions{
+	Offset: 100,
+	Count: 50
+})
+
+// List archives for a specific session ID
+archives, err := opentok.ListArchives(opentok.ArchiveListOptions{
+	SessionId: "2_MX4xMDB-flR1-QxNzIxNX4",
+})
+```
+
+---
+
 ### Account management
 
 #### Creating a new project API key
@@ -300,6 +392,69 @@ const (
 	 * forceDisconnect() method of the Session object.
 	 */
 	Moderator Role = "moderator"
+)
+```
+
+#### Archive Layout Type
+
+```go
+type ArchiveLayoutType string
+
+const (
+	/**
+	 * This is a tiled layout, which scales according to the number of videos.
+	 */
+	BestFit ArchiveLayoutType = "bestFit"
+	/**
+	 * This is a picture-in-picture layout, where a small stream is visible over
+	 * a full-size stream.
+	 */
+	PIP ArchiveLayoutType = "pip"
+	/**
+	 * This is a layout with one large stream on the right edge of the output,
+	 * and several smaller streams along the left edge of the output.
+	 */
+	VerticalPresentation ArchiveLayoutType = "verticalPresentation"
+	/**
+	 * This is a layout with one large stream on the top edge of the output,
+	 * and several smaller streams along the bottom edge of the output.
+	 */
+	HorizontalPresentation ArchiveLayoutType = "horizontalPresentation"
+	/**
+	 * To use a custom layout, set the type property for the layout to "custom"
+	 * and set an additional property, stylesheet, which is set to the CSS.
+	 */
+	Custom ArchiveLayoutType = "custom"
+)
+```
+
+#### Archive Output Mode
+
+```go
+type ArchiveOutputMode string
+
+const (
+	/**
+	 * The archive is a single MP4 file composed of all streams.
+	 */
+	Composed ArchiveOutputMode = "composed"
+	/**
+	 * The archive is a ZIP container file with multiple individual media files
+	 * for each stream, and a JSON metadata file for video synchronization.
+	 */
+	Individual ArchiveOutputMode = "individual"
+)
+```
+
+#### Archive Resolution
+
+```go
+type ArchiveResolution string
+
+const (
+	// The resolution of the archive.
+	SD ArchiveResolution = "640x480"
+	HD ArchiveResolution = "1280x720"
 )
 ```
 
