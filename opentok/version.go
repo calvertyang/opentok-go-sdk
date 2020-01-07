@@ -1,3 +1,3 @@
 package opentok
 
-const version = "1.2.0"
+const version = "1.3.0"
