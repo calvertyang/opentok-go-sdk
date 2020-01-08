@@ -237,7 +237,7 @@ err := ot.DeleteArchiveStorage()
 For composed archives, you can change the layout dynamically, using the `OpenTok.SetArchiveLayout(archiveId, layout)` method.
 
 ```go
-result, err := ot.SetArchiveLayout(opentok.ArchiveLayout{
+archive, err := ot.SetArchiveLayout(opentok.ArchiveLayout{
 	Type: opentok.PIP,
 })
 ```
