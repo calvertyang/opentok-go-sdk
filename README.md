@@ -176,14 +176,69 @@ You can also get a list of all the Archives you've created (up to 1000) with you
 
 ```go
 // Paginate through the results via offset by 100 and count by 50
-archives, err := opentok.ListArchives(opentok.ArchiveListOptions{
+archives, err := ot.ListArchives(opentok.ArchiveListOptions{
 	Offset: 100,
 	Count: 50
 })
 
 // List archives for a specific session ID
-archives, err := opentok.ListArchives(opentok.ArchiveListOptions{
+archives, err := ot.ListArchives(opentok.ArchiveListOptions{
 	SessionId: "2_MX4xMDB-flR1-QxNzIxNX4",
+})
+```
+
+Note that you can also create an automatically archived session, by passing in `OpenTok.AutoArchived` as the `ArchiveMode` option when you call the `OpenTok.CreateSession()` method (see "[Creating Sessions](#creating-sessions)" above).
+
+For an OpenTok project, you can have OpenTok upload completed archives to an Amazon S3 bucket (or an S3-compliant storage provider) or Microsoft Azure container by calling the `OpenTok.SetArchiveStorage(options)` method.
+
+```go
+// Set an archive upload target to Amazon S3 and prevents archive files from
+// being stored in the OpenTok cloud if the upload fails.
+result, err := ot.SetArchiveStorage(opentok.StorageOptions{
+	Type: "s3",
+	Config: opentok.AmazonS3Config{
+		AccessKey: "myUsername",
+		SecretKey: "myPassword",
+		Bucket:    "bucketName",
+	},
+	Fallback: "none",
+})
+
+// Set an archive upload target to an S3-compliant storage provider
+result, err := ot.SetArchiveStorage(opentok.StorageOptions{
+	Type: "s3",
+	Config: opentok.AmazonS3Config{
+		AccessKey: "myUsername",
+		SecretKey: "myPassword",
+		Bucket:    "bucketName",
+		Endpoint:  "s3.example.com"
+	},
+})
+
+// Set an archive upload target to Microsoft Azure
+result, err := ot.SetArchiveStorage(opentok.StorageOptions{
+	Type: "azure",
+	Config: opentok.AzureConfig{
+		AccountName: "myAccountname",
+		AccountKey:  "myAccountKey",
+		Container:   "containerName",
+		Domain:      "domainName" // optional
+	},
+})
+```
+
+Once the archive upload target is set for a project, you can also delete it by calling `OpenTok.DeleteArchiveStorage()` method.
+
+```go
+// Delete the configuration of archive storage.
+err := ot.DeleteArchiveStorage()
+```
+
+For composed archives, you can change the layout dynamically, using the `OpenTok.SetArchiveLayout(archiveId, layout)` method.
+
+```go
+result, err := ot.SetArchiveLayout(opentok.ArchiveLayout{
+	Type: opentok.PIP,
 })
 ```
 
@@ -360,6 +415,19 @@ type ArchiveList struct {
 	Count int
 	// An array of archive defining each archive retrieved.
 	Items []*Archive
+}
+```
+
+#### Archive Storage Options
+
+```go
+type StorageOptions struct {
+	// Type of storage.
+	Type     string      `json:"type"`
+	// Settings for the storage.
+	Config   interface{} `json:"config"`
+	// Error handling method if upload fails.
+	Fallback string      `json:"fallback,omitempty"`
 }
 ```
 

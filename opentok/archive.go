@@ -104,6 +104,26 @@ type ArchiveList struct {
 	Items []*Archive `json:"items"`
 }
 
+type AmazonS3Config struct {
+	AccessKey string `json:"accessKey"`          // The Amazon Web Services access key.
+	SecretKey string `json:"secretKey"`          // The Amazon Web Services secret key.
+	Bucket    string `json:"bucket"`             // The S3 bucket name.
+	Endpoint  string `json:"endpoint,omitempty"` // The S3 or S3-compatible storage endpoint.
+}
+
+type AzureConfig struct {
+	AccountName string `json:"accountName"`      // The Microsoft Azure account name.
+	AccountKey  string `json:"accountKey"`       // The Microsoft Azure account key.
+	Container   string `json:"container"`        // The Microsoft Azure container name.
+	Domain      string `json:"domain,omitempty"` // The Microsoft Azure domain in which the container resides.
+}
+
+type StorageOptions struct {
+	Type     string      `json:"type"`               // Type of storage.
+	Config   interface{} `json:"config"`             // Settings for the storage.
+	Fallback string      `json:"fallback,omitempty"` // Error handling method if upload fails.
+}
+
 /**
  * Start the recording of the archive.
  *
@@ -122,7 +142,7 @@ func (ot *OpenTok) StartArchive(sessionId string, opts ArchiveOptions) (*Archive
 		}
 
 		if opts.Layout.Type == Custom && opts.Layout.StyleSheet == "" {
-			return nil, fmt.Errorf("StyleSheet property of layout cannot be blank")
+			return nil, fmt.Errorf("StyleSheet property of layout cannot be empty")
 		}
 
 		// For other layout types, do not set a stylesheet property.
@@ -352,6 +372,170 @@ func (ot *OpenTok) DeleteArchive(archiveId string) error {
 	}
 
 	return nil
+}
+
+/**
+ * For an OpenTok project, you can have OpenTok upload completed archives to an
+ * Amazon S3 bucket (or an S3-compliant storage provider) or Microsoft Azure container.
+ */
+func (ot *OpenTok) SetArchiveStorage(opts StorageOptions) (*StorageOptions, error) {
+	if opts.Type != "s3" && opts.Type != "azure" {
+		return nil, fmt.Errorf("Only support Amazon S3 or Microsoft Azure for upload completed archives")
+	}
+
+	switch config := opts.Config.(type) {
+	case AmazonS3Config:
+		if config.AccessKey == "" {
+			return nil, fmt.Errorf("The Amazon Web Services access key cannot be empty")
+		}
+
+		if config.SecretKey == "" {
+			return nil, fmt.Errorf("The Amazon Web Services secret key cannot be empty")
+		}
+
+		if config.Bucket == "" {
+			return nil, fmt.Errorf("The S3 bucket name cannot be empty")
+		}
+	case AzureConfig:
+		if config.AccountName == "" {
+			return nil, fmt.Errorf("The Microsoft Azure account name cannot be empty")
+		}
+
+		if config.AccountKey == "" {
+			return nil, fmt.Errorf("The Microsoft Azure account key cannot be empty")
+		}
+
+		if config.Container == "" {
+			return nil, fmt.Errorf("The Microsoft Azure container name cannot be empty")
+		}
+	default:
+		return nil, fmt.Errorf("Invalid archive storage config")
+	}
+
+	jsonStr, _ := json.Marshal(opts)
+
+	//Create jwt token
+	jwt, err := ot.jwtToken(projectToken)
+	if err != nil {
+		return nil, err
+	}
+
+	endpoint := apiHost + projectURL + "/" + ot.apiKey + "/archive/storage"
+	req, err := http.NewRequest("PUT", endpoint, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("X-OPENTOK-AUTH", jwt)
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+	}
+
+	options := &StorageOptions{}
+	if err := json.NewDecoder(res.Body).Decode(options); err != nil {
+		return nil, err
+	}
+
+	return options, nil
+}
+
+/**
+ * Delete the configuration of archive storage.
+ */
+func (ot *OpenTok) DeleteArchiveStorage() error {
+	//Create jwt token
+	jwt, err := ot.jwtToken(projectToken)
+	if err != nil {
+		return err
+	}
+
+	endpoint := apiHost + projectURL + "/" + ot.apiKey + "/archive/storage"
+	req, err := http.NewRequest("DELETE", endpoint, nil)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("X-OPENTOK-AUTH", jwt)
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 204 {
+		return fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+	}
+
+	return nil
+}
+
+/**
+ * Dynamically change the layout type of a composed archive.
+ */
+func (ot *OpenTok) SetArchiveLayout(archiveId string, layout ArchiveLayout) (*Archive, error) {
+	if archiveId == "" {
+		return nil, fmt.Errorf("Cannot change the layout type of a composed archive without an archive ID")
+	}
+
+	if layout.Type != BestFit && layout.Type != PIP && layout.Type != Custom &&
+		layout.Type != VerticalPresentation && layout.Type != HorizontalPresentation {
+		return nil, fmt.Errorf("Invalid type of layout for archive")
+	}
+
+	if layout.Type == Custom && layout.StyleSheet == "" {
+		return nil, fmt.Errorf("StyleSheet property of layout cannot be empty")
+	}
+
+	// For other layout types, do not set a stylesheet property.
+	if layout.Type != Custom && layout.StyleSheet != "" {
+		return nil, fmt.Errorf("Set stylesheet property only when using custom layout")
+	}
+
+	jsonStr, _ := json.Marshal(layout)
+
+	//Create jwt token
+	jwt, err := ot.jwtToken(projectToken)
+	if err != nil {
+		return nil, err
+	}
+
+	endpoint := apiHost + projectURL + "/" + ot.apiKey + "/archive/" + archiveId + "/layout"
+	req, err := http.NewRequest("PUT", endpoint, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("X-OPENTOK-AUTH", jwt)
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+	}
+
+	archive := &Archive{}
+	if err := json.NewDecoder(res.Body).Decode(archive); err != nil {
+		return nil, err
+	}
+
+	return archive, nil
 }
 
 func (archive *Archive) Stop() (*Archive, error) {
