@@ -471,11 +471,37 @@ type ArchiveList struct {
 ```go
 type StorageOptions struct {
 	// Type of storage.
-	Type     string      `json:"type"`
+	Type string
 	// Settings for the storage.
-	Config   interface{} `json:"config"`
+	Config interface{}
 	// Error handling method if upload fails.
-	Fallback string      `json:"fallback,omitempty"`
+	Fallback string
+}
+```
+
+#### Stream Details Object
+
+```go
+type Stream struct {
+	// The unique stream ID.
+	Id string
+	// Either "camera" or "screen".
+	VideoType string
+	// The stream name.
+	Name string
+	// An array of the layout classes for the stream.
+	LayoutClassList []string
+}
+```
+
+#### Stream List Details Object
+
+```go
+type StreamList struct {
+	// The total number of streams for the session.
+	Count int
+	// An array of stream defining each stream retrieved.
+	Items []*Stream
 }
 ```
 

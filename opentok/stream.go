@@ -7,10 +7,10 @@ import (
 )
 
 type Stream struct {
-	Id              string   `json:"id"`
-	VideoType       string   `json:"videoType"`
-	Name            string   `json:"name"`
-	LayoutClassList []string `json:"layoutClassList"`
+	Id              string   `json:"id"`              // The unique stream ID.
+	VideoType       string   `json:"videoType"`       // Either "camera" or "screen".
+	Name            string   `json:"name"`            // The stream name.
+	LayoutClassList []string `json:"layoutClassList"` // An array of the layout classes for the stream.
 }
 
 type StreamList struct {
