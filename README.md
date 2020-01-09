@@ -97,6 +97,54 @@ token, err := session.GenerateToken(opentok.TokenOptions{
 
 The response data is a string of token.
 
+#### Sending signals
+
+You can send a signal to all participants in an OpenTok Session by calling the `OpenTok.SendSessionSignal(sessionId, signalData)` method.
+
+```go
+err := ot.SendSessionSignal(sessionId, opentok.SignalData{
+	Type: "foo",
+	Data: "bar",
+})
+```
+
+Or send a signal to a specific participant in the session by calling the `OpenTok.SendConnectionSignal(sessionId, connectionId, signalData)` method.
+
+```go
+err := ot.SendConnectionSignal(sessionId, connectionId, opentok.SignalData{
+	Type: "foo",
+	Data: "bar",
+})
+```
+
+This is the server-side equivalent to the signal() method in the OpenTok client SDKs. See [OpenTok signaling developer guide](https://www.tokbox.com/developer/guides/signaling/).
+
+#### Disconnecting participants
+
+You can disconnect participants from an OpenTok Session using the `OpenTok.ForceDisconnect(sessionId, connectionId)` method.
+
+```go
+err := ot.ForceDisconnect(sessionId, connectionId)
+```
+
+This is the server-side equivalent to the forceDisconnect() method in OpenTok.js: https://www.tokbox.com/developer/guides/moderation/js/#force_disconnect.
+
+#### Getting stream information
+
+You can get information on an active stream in an OpenTok session
+
+To get information on all streams in a session, call `OpenTok.ListStreams(sessionId)`.
+
+```go
+streams, err := ot.ListStreams(sessionId)
+```
+
+To get information of a specific stream in a session, call `OpenTok.GetStream(sessionId, streamId)`.
+
+```go
+stream, err := ot.GetStream(sessionId, streamId)
+```
+
 ---
 
 ### Archiving
