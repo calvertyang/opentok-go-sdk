@@ -89,7 +89,7 @@ token, err := session.GenerateToken(opentok.TokenOptions{})
 // Set some options in a Token
 token, err := session.GenerateToken(opentok.TokenOptions{
 	Role:                   opentok.Moderator,
-	ExpireTime:             time.Now().UTC().Add(7 * 24 * time.Hour).Unix(), // in one week
+	ExpireTime:             int(time.Now().UTC().Add(7 * 24 * time.Hour).Unix()), // in one week
 	Data:                   "name=Johnny",
 	InitialLayoutClassList: []string{"focus"},
 })
@@ -226,7 +226,7 @@ You can also get a list of all the Archives you've created (up to 1000) with you
 // Paginate through the results via offset by 100 and count by 50
 archives, err := ot.ListArchives(opentok.ArchiveListOptions{
 	Offset: 100,
-	Count: 50
+	Count:  50,
 })
 
 // List archives for a specific session ID
@@ -349,7 +349,7 @@ You can also get a list of all the Broadcasts you've created (up to 1000) with y
 // Paginate through the results via offset by 100 and count by 50
 broadcasts, err := ot.ListBroadcasts(opentok.BroadcastListOptions{
 	Offset: 100,
-	Count: 50
+	Count:  50,
 })
 
 // List broadcasts for a specific session ID
