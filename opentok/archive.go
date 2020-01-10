@@ -9,33 +9,33 @@ import (
 	"strings"
 )
 
-type ArchiveLayoutType string
+type LayoutType string
 
 const (
 	/**
 	 * This is a tiled layout, which scales according to the number of videos.
 	 */
-	BestFit ArchiveLayoutType = "bestFit"
+	BestFit LayoutType = "bestFit"
 	/**
 	 * This is a picture-in-picture layout, where a small stream is visible over
 	 * a full-size stream.
 	 */
-	PIP ArchiveLayoutType = "pip"
+	PIP LayoutType = "pip"
 	/**
 	 * This is a layout with one large stream on the right edge of the output,
 	 * and several smaller streams along the left edge of the output.
 	 */
-	VerticalPresentation ArchiveLayoutType = "verticalPresentation"
+	VerticalPresentation LayoutType = "verticalPresentation"
 	/**
 	 * This is a layout with one large stream on the top edge of the output,
 	 * and several smaller streams along the bottom edge of the output.
 	 */
-	HorizontalPresentation ArchiveLayoutType = "horizontalPresentation"
+	HorizontalPresentation LayoutType = "horizontalPresentation"
 	/**
 	 * To use a custom layout, set the type property for the layout to "custom"
 	 * and set an additional property, stylesheet, which is set to the CSS.
 	 */
-	Custom ArchiveLayoutType = "custom"
+	Custom LayoutType = "custom"
 )
 
 type ArchiveOutputMode string
@@ -52,27 +52,27 @@ const (
 	Individual ArchiveOutputMode = "individual"
 )
 
-type ArchiveResolution string
+type Resolution string
 
 const (
 	// The resolution of the archive.
-	SD ArchiveResolution = "640x480"
-	HD ArchiveResolution = "1280x720"
+	SD Resolution = "640x480"
+	HD Resolution = "1280x720"
 )
 
-type ArchiveLayout struct {
-	Type       ArchiveLayoutType `json:"type,omitempty"`
-	StyleSheet string            `json:"stylesheet,omitempty"`
+type Layout struct {
+	Type       LayoutType `json:"type,omitempty"`
+	StyleSheet string     `json:"stylesheet,omitempty"`
 }
 
 type ArchiveOptions struct {
 	SessionId  string            `json:"sessionId"`
 	HasAudio   bool              `json:"hasAudio,omitempty"`
 	HasVideo   bool              `json:"hasVideo,omitempty"`
-	Layout     *ArchiveLayout    `json:"layout,omitempty"`
+	Layout     *Layout           `json:"layout,omitempty"`
 	Name       string            `json:"name,omitempty"`
 	OutputMode ArchiveOutputMode `json:"outputMode,omitempty"`
-	Resolution ArchiveResolution `json:"resolution,omitempty"`
+	Resolution Resolution        `json:"resolution,omitempty"`
 }
 
 type Archive struct {
@@ -85,7 +85,7 @@ type Archive struct {
 	OutputMode ArchiveOutputMode `json:"outputMode"` // The output mode to be generated for this archive.
 	ProjectId  int               `json:"projectId"`  // The API key associated with the archive.
 	Reason     string            `json:"reason"`     // This string describes the reason the archive stopped or failed.
-	Resolution ArchiveResolution `json:"resolution"` // The resolution of the archive.
+	Resolution Resolution        `json:"resolution"` // The resolution of the archive.
 	SessionId  string            `json:"sessionId"`  // The session ID of the OpenTok session associated with this archive.
 	Size       int               `json:"size"`       // The size of the MP4 file.
 	Status     string            `json:"status"`     // The status of the archive.
@@ -292,6 +292,10 @@ func (ot *OpenTok) ListArchives(opts ArchiveListOptions) (*ArchiveList, error) {
 		return nil, err
 	}
 
+	for _, archive := range archiveList.Items {
+		archive.OpenTok = ot
+	}
+
 	return archiveList, nil
 }
 
@@ -483,7 +487,7 @@ func (ot *OpenTok) DeleteArchiveStorage() error {
 /**
  * Dynamically change the layout type of a composed archive.
  */
-func (ot *OpenTok) SetArchiveLayout(archiveId string, layout ArchiveLayout) (*Archive, error) {
+func (ot *OpenTok) SetArchiveLayout(archiveId string, layout Layout) (*Archive, error) {
 	if archiveId == "" {
 		return nil, fmt.Errorf("Cannot change the layout type of a composed archive without an archive ID")
 	}
@@ -534,6 +538,8 @@ func (ot *OpenTok) SetArchiveLayout(archiveId string, layout ArchiveLayout) (*Ar
 	if err := json.NewDecoder(res.Body).Decode(archive); err != nil {
 		return nil, err
 	}
+
+	archive.OpenTok = ot
 
 	return archive, nil
 }

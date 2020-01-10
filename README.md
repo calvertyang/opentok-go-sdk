@@ -282,13 +282,104 @@ Once the archive upload target is set for a project, you can also delete it by c
 err := ot.DeleteArchiveStorage()
 ```
 
-For composed archives, you can change the layout dynamically, using the `OpenTok.SetArchiveLayout(archiveId, layout)` method.
+For composed archives, you can change the layout dynamically, using the `OpenTok.SetArchiveLayout(archiveId, layoutOptions)` method.
 
 ```go
-archive, err := ot.SetArchiveLayout(opentok.ArchiveLayout{
+archive, err := ot.SetArchiveLayout(archiveId, opentok.Layout{
 	Type: opentok.PIP,
 })
 ```
+
+---
+
+### Live streaming broadcasts
+
+_Important_: Only [routed OpenTok sessions](https://tokbox.com/developer/guides/create-session/#media-mode) support live streaming broadcasts.
+
+To start a [live streaming broadcast](https://tokbox.com/developer/guides/broadcast/live-streaming) of an OpenTok session, call the `OpenTok.StartBroadcast(sessionId, options)` method.
+
+```go
+broadcast, err := ot.StartBroadcast(sessionId, opentok.BroadcastOptions{
+	Layout: &opentok.Layout{
+		Type: opentok.VerticalPresentation,
+	},
+	MaxDuration: 5400,
+	Outputs: opentok.BroadcastOutputOptions{
+		HLS:  opentok.HLSConfig{},
+		RTMP: []*opentok.RTMPConfig{
+			&opentok.RTMPConfig{
+				Id:         "foo",
+				ServerUrl:  "rtmps://myfooserver/myfooapp",
+				StreamName: "myfoostream",
+			},
+			&opentok.RTMPConfig{
+				Id:         "bar",
+				ServerUrl:  "rtmp://mybarserver/mybarapp",
+				StreamName: "mybarstream",
+			},
+		},
+	},
+	Resolution: opentok.HD,
+})
+```
+
+See the API reference for details on the `options` parameter.
+
+Call the `OpenTok.StopBroadcast(broadcastId)` method to stop a live streaming broadcast.
+
+```go
+broadcast, err := ot.StopBroadcast(broadcastId)
+```
+
+You can also call the `Stop()` method of the Broadcast instance to stop a broadcast.
+
+```go
+broadcast, err := ot.StopBroadcast(broadcastId)
+```
+
+Call the `Opentok.GetBroadcast(broadcastId)` method, to get a Broadcast instance.
+
+```go
+broadcast, err := ot.GetBroadcast(broadcastId)
+```
+
+You can also get a list of all the Broadcasts you've created (up to 1000) with your API Key. This is done using the `OpenTok.ListBroadcasts(options)` method.
+
+```go
+// Paginate through the results via offset by 100 and count by 50
+broadcasts, err := ot.ListBroadcasts(opentok.BroadcastListOptions{
+	Offset: 100,
+	Count: 50
+})
+
+// List broadcasts for a specific session ID
+broadcasts, err := ot.ListBroadcasts(opentok.BroadcastListOptions{
+	SessionId: "2_MX4xMDB-flR1-QxNzIxNX4",
+})
+```
+
+To change the broadcast layout, call the `OpenTok.SetBroadcastLayout(broadcastId, layoutOptions)` method.
+
+```go
+broadcast, err := ot.SetBroadcastLayout(broadcastId, opentok.Layout{
+	Type: opentok.PIP,
+})
+```
+
+You can set the initial layout class for a client's streams by setting the layout option when you create the token for the client, using the `OpenTok.generateToken()` method. And you can change the layout classes for streams in a session by calling the `OpenTok.SetStreamClassLists(sessionId, options)` method.
+
+```go
+streams, err := ot.SetStreamClassLists(sessionId, opentok.StreamClassOptions{
+	Items: []*opentok.StreamClass{
+		&opentok.StreamClass{
+			Id: "8b732909-0a06-46a2-8ea8-074e64d43422",
+			LayoutClassList: []string{"full"},
+		},
+	},
+})
+```
+
+Setting the layout of a live streaming broadcast is optional. By default, live streaming broadcasts use the "best fit" layout.
 
 ---
 
@@ -368,7 +459,7 @@ The response data is a [project details object](#project-details-object).
 
 ### Responses
 
-#### Session Details Object
+#### Session
 
 ```go
 type Session struct {
@@ -385,7 +476,7 @@ type Session struct {
 }
 ```
 
-#### Project Details Object
+#### Project
 
 ```go
 type Project struct {
@@ -418,7 +509,7 @@ type Project struct {
 }
 ```
 
-#### Archive Details Object
+#### Archive
 
 ```go
 type Archive struct {
@@ -441,7 +532,7 @@ type Archive struct {
 	// This string describes the reason the archive stopped or failed.
 	Reason string
 	// The resolution of the archive.
-	Resolution ArchiveResolution
+	Resolution Resolution
 	// The session ID of the OpenTok session associated with this archive.
 	SessionId string
 	// The size of the MP4 file.
@@ -455,7 +546,7 @@ type Archive struct {
 }
 ```
 
-#### Archive List Details Object
+#### Archive List
 
 ```go
 type ArchiveList struct {
@@ -479,7 +570,7 @@ type StorageOptions struct {
 }
 ```
 
-#### Stream Details Object
+#### Stream
 
 ```go
 type Stream struct {
@@ -494,7 +585,7 @@ type Stream struct {
 }
 ```
 
-#### Stream List Details Object
+#### Stream List
 
 ```go
 type StreamList struct {
@@ -502,6 +593,42 @@ type StreamList struct {
 	Count int
 	// An array of stream defining each stream retrieved.
 	Items []*Stream
+}
+```
+
+#### Broadcast
+
+```go
+type Broadcast struct {
+	// The unique ID for the broadcast.
+	Id string
+	// The OpenTok session ID.
+	SessionId string
+	// The API key associated with the broadcast..
+	ProjectId int
+	// The time at which the broadcast was created, in milliseconds since the UNIX epoch.
+	CreatedAt int
+	// The time at which the broadcast was updated, in milliseconds since the UNIX epoch.
+	UpdatedAt int
+	// The resolution of the broadcast.
+	Resolution Resolution
+	// The status of the broadcast.
+	Status string
+	// An object containing details about the HLS and RTMP broadcasts.
+	BroadcastUrls BroadcastUrls
+	// The instance of OpenTok
+	OpenTok *OpenTok
+}
+```
+
+#### Broadcast List
+
+```go
+type BroadcastList struct {
+	// The total number of broadcasts for the session.
+	Count int
+	// An array of broadcast defining each broadcast retrieved.
+	Items []*Broadcast
 }
 ```
 
@@ -583,36 +710,36 @@ const (
 )
 ```
 
-#### Archive Layout Type
+#### Layout Type
 
 ```go
-type ArchiveLayoutType string
+type LayoutType string
 
 const (
 	/**
 	 * This is a tiled layout, which scales according to the number of videos.
 	 */
-	BestFit ArchiveLayoutType = "bestFit"
+	BestFit LayoutType = "bestFit"
 	/**
 	 * This is a picture-in-picture layout, where a small stream is visible over
 	 * a full-size stream.
 	 */
-	PIP ArchiveLayoutType = "pip"
+	PIP LayoutType = "pip"
 	/**
 	 * This is a layout with one large stream on the right edge of the output,
 	 * and several smaller streams along the left edge of the output.
 	 */
-	VerticalPresentation ArchiveLayoutType = "verticalPresentation"
+	VerticalPresentation LayoutType = "verticalPresentation"
 	/**
 	 * This is a layout with one large stream on the top edge of the output,
 	 * and several smaller streams along the bottom edge of the output.
 	 */
-	HorizontalPresentation ArchiveLayoutType = "horizontalPresentation"
+	HorizontalPresentation LayoutType = "horizontalPresentation"
 	/**
 	 * To use a custom layout, set the type property for the layout to "custom"
 	 * and set an additional property, stylesheet, which is set to the CSS.
 	 */
-	Custom ArchiveLayoutType = "custom"
+	Custom LayoutType = "custom"
 )
 ```
 
@@ -634,15 +761,15 @@ const (
 )
 ```
 
-#### Archive Resolution
+#### Resolution
 
 ```go
-type ArchiveResolution string
+type Resolution string
 
 const (
 	// The resolution of the archive.
-	SD ArchiveResolution = "640x480"
-	HD ArchiveResolution = "1280x720"
+	SD Resolution = "640x480"
+	HD Resolution = "1280x720"
 )
 ```
 
