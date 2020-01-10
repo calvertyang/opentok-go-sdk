@@ -292,6 +292,29 @@ archive, err := ot.SetArchiveLayout(archiveId, opentok.Layout{
 
 ---
 
+### SIP interconnect
+
+You can add an audio-only stream from an external third-party SIP gateway using the SIP Interconnect feature. This requires a SIP URI, the session ID you wish to add the audio-only stream to.
+
+```go
+sipCall, err := ot.Dial(sessionId, opentok.DialOptions{
+	SIP: opentok.SIP{
+		URI: "sip:user@sip.partner.com;transport=tls",
+		From: "from@example.com",
+		Headers: &opentok.SIPHeaders{
+			"headerKey": "headerValue",
+		},
+		Auth: &opentok.SIPAuth{
+			Username: "username",
+			Password: "password",
+		},
+		Secure: true,
+	},
+})
+```
+
+---
+
 ### Live streaming broadcasts
 
 _Important_: Only [routed OpenTok sessions](https://tokbox.com/developer/guides/create-session/#media-mode) support live streaming broadcasts.
@@ -629,6 +652,19 @@ type BroadcastList struct {
 	Count int
 	// An array of broadcast defining each broadcast retrieved.
 	Items []*Broadcast
+}
+```
+
+#### SIP Call
+
+```go
+type SIPCall struct {
+	// A unique ID for the SIP call.
+	Id string
+	// The OpenTok connection ID for the SIP call's connection in the OpenTok session.
+	ConnectionId string
+	// The OpenTok stream ID for the SIP call's stream in the OpenTok session.
+	StreamId string
 }
 ```
 
