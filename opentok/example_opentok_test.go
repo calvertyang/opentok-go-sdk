@@ -1,6 +1,6 @@
 package opentok_test
 
-import "github.com/calvertyang/opentok-go-sdk/opentok"
+import "github.com/calvertyang/opentok-go-sdk/v2/opentok"
 
 const (
 	apiKey    = "<your api key here>"

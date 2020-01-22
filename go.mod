@@ -1,4 +1,4 @@
-module github.com/calvertyang/opentok-go-sdk
+module github.com/calvertyang/opentok-go-sdk/v2
 
 go 1.12
 

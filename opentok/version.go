@@ -4,4 +4,4 @@ package opentok
 const SDKName = "OpenTok-Go-SDK"
 
 // SDKVersion is the version of this SDK
-const SDKVersion = "1.8.0"
+const SDKVersion = "2.0.0"
