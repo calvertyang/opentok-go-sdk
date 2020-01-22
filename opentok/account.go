@@ -9,38 +9,45 @@ import (
 
 const projectURL = "/v2/project"
 
+// ProjectStatus is the alias of string type
 type ProjectStatus string
 
 const (
-	/**
-	 * Set to ACTIVE to use the project API key.
-	 */
+	// ProjectActive is used to set the project API key to ACTIVE.
 	ProjectActive ProjectStatus = "ACTIVE"
-	/**
-	 * Set to SUSPENDED, you will not be able to use the project API key (and any OpenTok sessions created with it).
-	 */
+
+	// ProjectSuspended is used to set the project API key to SUSPENDED, you will
+	// not be able to use the project API key (and any OpenTok sessions created
+	// with it).
 	ProjectSuspended ProjectStatus = "SUSPENDED"
 )
 
+// Project defines the response returned from API
 type Project struct {
-	Id                     string `json:"id"`                     // The OpenTok project API key
-	UserId                 int    `json:"userId"`                 // The OpenTok account id
-	Secret                 string `json:"secret"`                 // The OpenTok project API secret
-	Status                 string `json:"status"`                 // Whether the project is active ("VALID", "ACTIVE") or suspended ("SUSPENDED").
-	UserStatus             string `json:"userStatus"`             // The OpenTok account status
-	Name                   string `json:"name"`                   // The name, if you specified one when creating the project; or an empty string if you did not specify a name
-	ContactEmail           string `json:"contactEmail"`           // The OpenTok account email
-	CreatedAt              int    `json:"createdAt"`              // The time at which the project was created (a UNIX timestamp, in milliseconds)
-	UpdatedAt              int    `json:"updatedAt"`              // The time at which the project was updated (a UNIX timestamp, in milliseconds)
-	EnvironmentId          int    `json:"environmentId"`          // The environment id that project is running on
-	EnvironmentName        string `json:"environmentName"`        // The environment name that project is running on
-	EnvironmentDescription string `json:"environmentDescription"` // The environment description that project is running on
-	ApiKey                 string `json:"apiKey"`                 // The OpenTok project API key
+	// The OpenTok project API key
+	ID string `json:"id"`
+
+	// The OpenTok project API secret
+	Secret string `json:"secret"`
+
+	// Whether the project is active ("VALID", "ACTIVE") or suspended ("SUSPENDED").
+	Status string `json:"status"`
+
+	// The name, if you specified one when creating the project; or an empty
+	// string if you did not specify a name
+	Name string `json:"name"`
+
+	// The time at which the project was created (a UNIX timestamp, in milliseconds)
+	CreatedAt int `json:"createdAt"`
+
+	// The environment name that project is running on
+	EnvironmentName string `json:"environmentName"`
+
+	// The environment description that project is running on
+	EnvironmentDescription string `json:"environmentDescription"`
 }
 
-/**
- * Use this method to create an OpenTok API key and secret for a project.
- */
+// CreateProject creates an OpenTok API key and secret for a project.
 func (ot *OpenTok) CreateProject(projectName string) (*Project, error) {
 	jsonStr := []byte{}
 	if projectName != "" {
@@ -53,7 +60,7 @@ func (ot *OpenTok) CreateProject(projectName string) (*Project, error) {
 		return nil, err
 	}
 
-	endpoint := apiHost + projectURL
+	endpoint := ot.apiHost + projectURL
 	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return nil, err
@@ -63,6 +70,7 @@ func (ot *OpenTok) CreateProject(projectName string) (*Project, error) {
 		req.Header.Add("Content-Type", "application/json")
 	}
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
+	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -83,9 +91,7 @@ func (ot *OpenTok) CreateProject(projectName string) (*Project, error) {
 	return project, nil
 }
 
-/**
- * Use this method to get the records for all projects.
- */
+// ListProjects returns the records for all projects.
 func (ot *OpenTok) ListProjects() ([]*Project, error) {
 	//Create jwt token
 	jwt, err := ot.jwtToken(accountToken)
@@ -93,13 +99,14 @@ func (ot *OpenTok) ListProjects() ([]*Project, error) {
 		return nil, err
 	}
 
-	endpoint := apiHost + projectURL
+	endpoint := ot.apiHost + projectURL
 	req, err := http.NewRequest("GET", endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
+	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -120,11 +127,9 @@ func (ot *OpenTok) ListProjects() ([]*Project, error) {
 	return projects, nil
 }
 
-/**
- * Use this method to get a project details record describing the project.
- */
-func (ot *OpenTok) GetProject(projectApiKey string) (*Project, error) {
-	if projectApiKey == "" {
+// GetProject returns a project details record describing the project.
+func (ot *OpenTok) GetProject(projectAPIKey string) (*Project, error) {
+	if projectAPIKey == "" {
 		return nil, fmt.Errorf("Cannot get project information without a project API key")
 	}
 
@@ -134,13 +139,14 @@ func (ot *OpenTok) GetProject(projectApiKey string) (*Project, error) {
 		return nil, err
 	}
 
-	endpoint := apiHost + projectURL + "/" + projectApiKey
+	endpoint := ot.apiHost + projectURL + "/" + projectAPIKey
 	req, err := http.NewRequest("GET", endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
+	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -161,15 +167,14 @@ func (ot *OpenTok) GetProject(projectApiKey string) (*Project, error) {
 	return project, nil
 }
 
-/**
- * Account administrators can use this method to change a project's status.
- */
-func (ot *OpenTok) ChangeProjectStatus(projectApiKey string, projectStatus ProjectStatus) (*Project, error) {
-	if projectApiKey == "" {
+// ChangeProjectStatus changes the status of  project. The status is either
+// active or suspended.
+func (ot *OpenTok) ChangeProjectStatus(projectAPIKey string, projectStatus ProjectStatus) (*Project, error) {
+	if projectAPIKey == "" {
 		return nil, fmt.Errorf("Project status cannot be changed without a project API key")
 	}
 
-	if projectStatus == "" || (projectStatus != ProjectActive && projectStatus != ProjectSuspended) {
+	if projectStatus != ProjectActive && projectStatus != ProjectSuspended {
 		return nil, fmt.Errorf("Project status cannot be changed without a valid project status")
 	}
 
@@ -181,7 +186,7 @@ func (ot *OpenTok) ChangeProjectStatus(projectApiKey string, projectStatus Proje
 		return nil, err
 	}
 
-	endpoint := apiHost + projectURL + "/" + projectApiKey
+	endpoint := ot.apiHost + projectURL + "/" + projectAPIKey
 	req, err := http.NewRequest("PUT", endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return nil, err
@@ -189,6 +194,7 @@ func (ot *OpenTok) ChangeProjectStatus(projectApiKey string, projectStatus Proje
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
+	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -209,11 +215,9 @@ func (ot *OpenTok) ChangeProjectStatus(projectApiKey string, projectStatus Proje
 	return project, nil
 }
 
-/**
- * For security reasons, you may want to generate a new API secret for a project.
- */
-func (ot *OpenTok) RefreshProjectSecret(projectApiKey string) (*Project, error) {
-	if projectApiKey == "" {
+// RefreshProjectSecret generates a new API secret for a project.
+func (ot *OpenTok) RefreshProjectSecret(projectAPIKey string) (*Project, error) {
+	if projectAPIKey == "" {
 		return nil, fmt.Errorf("Project secret cannot be refreshed without a project API key")
 	}
 
@@ -223,13 +227,14 @@ func (ot *OpenTok) RefreshProjectSecret(projectApiKey string) (*Project, error) 
 		return nil, err
 	}
 
-	endpoint := apiHost + projectURL + "/" + projectApiKey + "/refreshSecret"
+	endpoint := ot.apiHost + projectURL + "/" + projectAPIKey + "/refreshSecret"
 	req, err := http.NewRequest("POST", endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
+	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -250,11 +255,10 @@ func (ot *OpenTok) RefreshProjectSecret(projectApiKey string) (*Project, error) 
 	return project, nil
 }
 
-/**
- * Use this method to delete a project. This prevents the use of the project API key (an any OpenTok sessions created with it).
- */
-func (ot *OpenTok) DeleteProject(projectApiKey string) error {
-	if projectApiKey == "" {
+// DeleteProject prevents the use of the project API key (and any OpenTok
+// sessions created with it).
+func (ot *OpenTok) DeleteProject(projectAPIKey string) error {
+	if projectAPIKey == "" {
 		return fmt.Errorf("Project cannot be deleted without a project API key")
 	}
 
@@ -264,13 +268,14 @@ func (ot *OpenTok) DeleteProject(projectApiKey string) error {
 		return err
 	}
 
-	endpoint := apiHost + projectURL + "/" + projectApiKey
+	endpoint := ot.apiHost + projectURL + "/" + projectAPIKey
 	req, err := http.NewRequest("DELETE", endpoint, nil)
 	if err != nil {
 		return err
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
+	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
 	client := &http.Client{}
 	res, err := client.Do(req)

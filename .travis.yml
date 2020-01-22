@@ -1,0 +1,12 @@
+language: go
+sudo: false
+os:
+  - linux
+  - osx
+go:
+  - 1.12.x
+  - 1.13.x
+notifications:
+  email: false
+script:
+  - env GO111MODULE=on go test ./...

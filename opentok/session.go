@@ -16,79 +16,112 @@ import (
 
 const sessionCreateURL = "/session/create"
 
+// ArchiveMode is the alias of string type.
 type ArchiveMode string
 
 const (
-	/**
-	 * Set to always to have the session archived automatically.
-	 */
+	// AutoArchived is used to have the session archived automatically.
 	AutoArchived ArchiveMode = "always"
-	/**
-	 * Set to manual (the default), you can archive the session by calling the REST /archive POST method
-	 */
+
+	// ManualArchived is used to have the session archived manually, you can
+	// archive the session by calling the REST /archive POST method.
 	ManualArchived ArchiveMode = "manual"
 )
 
+// MediaMode is the alias of string type.
 type MediaMode string
 
 const (
-	/**
-	 * Set to enabled if you prefer clients to attempt to send audio-video streams directly to other clients
-	 */
+	// Relayed if you prefer clients to attempt to send audio-video
+	// streams directly to other clients.
 	Relayed MediaMode = "enabled"
-	/**
-	 * Set to disabled for sessions that use the OpenTok Media Router
-	 */
+
+	// Routed if you want to use the OpenTok Media Router.
 	Routed MediaMode = "disabled"
 )
 
+// SessionOptions defines the options for creating a session.
 type SessionOptions struct {
+	// Set to always to have the session archived automatically.
+	// With the archiveModeset to manual (the default), you can archive the
+	// session by calling the REST /archive POST method.
 	ArchiveMode ArchiveMode
-	Location    string
-	MediaMode   MediaMode
+
+	// The IP address that TokBox will use to situate the session in its global
+	// network.
+	Location string
+
+	// Set to enabled if you prefer clients to attempt to send audio-video
+	// streams directly to other clients; set to disabled for sessions that use
+	// the OpenTok Media Router.
+	MediaMode MediaMode
 }
 
+// Session defines the response returned from API.
 type Session struct {
-	SessionId      string   `json:"session_id"`
-	ProjectId      string   `json:"project_id"`
-	CreateDt       string   `json:"create_dt"`
-	MediaServerURL string   `json:"media_server_url"`
-	OpenTok        *OpenTok `json:"-"`
+	// The session ID.
+	SessionID string `json:"session_id"`
+
+	// The API key associated with the project.
+	ProjectID string `json:"project_id"`
+
+	// The time at which the session was created.
+	CreateDt string `json:"create_dt"`
+
+	// The URL of the OpenTok media router used by the session.
+	MediaServerURL string `json:"media_server_url"`
+
+	// The instance of OpenTok.
+	OpenTok *OpenTok `json:"-"`
 }
 
+// Role is the alias of string type.
 type Role string
 
 const (
-	/**
-	 * A publisher can publish streams, subscribe to streams, and signal.
-	 */
+	// Publisher can publish streams, subscribe to streams, and signal.
 	Publisher Role = "publisher"
-	/**
-	 * A subscriber can only subscribe to streams.
-	 */
+
+	// Subscriber can only subscribe to streams.
 	Subscriber Role = "subscriber"
-	/**
-	 * In addition to the privileges granted to a publisher, in clients using
-	 * the OpenTok.js library, a moderator can call the forceUnpublish() and
-	 * forceDisconnect() method of the Session object.
-	 */
+
+	// Moderator can call the forceUnpublish() and forceDisconnect() method of
+	// the Session object in clients using the OpenTok.js library, and have the
+	// privileges granted to a publisher.
 	Moderator Role = "moderator"
 )
 
+// TokenOptions defines the options for generating token.
 type TokenOptions struct {
-	Role                   Role
-	Data                   string
-	ExpireTime             int
+	// The role to determine the capabilities of the client that connects with
+	// a token.
+	Role Role
+
+	// The metadata for describing the client.
+	Data string
+
+	// The expiration period of the token.
+	ExpireTime int64
+
+	// Layout classes for the stream.
 	InitialLayoutClassList []string
 }
 
-type SessionIdInfo struct {
-	ApiKey     string
-	Location   string
+// SessionIDInfo defines the information decoded from the session ID.
+type SessionIDInfo struct {
+	// The API key associated with the project.
+	APIKey string
+
+	// The IP address that TokBox use to situate the session in its global
+	// network.
+	Location string
+
+	// The time at which the session was created.
 	CreateTime time.Time
 }
 
-func (ot *OpenTok) CreateSession(opts SessionOptions) (*Session, error) {
+// CreateSession generates a new session.
+func (ot *OpenTok) CreateSession(opts *SessionOptions) (*Session, error) {
 	params := url.Values{}
 
 	if opts.ArchiveMode != "" {
@@ -109,13 +142,14 @@ func (ot *OpenTok) CreateSession(opts SessionOptions) (*Session, error) {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", apiHost+sessionCreateURL, strings.NewReader(params.Encode()))
+	req, err := http.NewRequest("POST", ot.apiHost+sessionCreateURL, strings.NewReader(params.Encode()))
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
+	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -143,21 +177,23 @@ func (ot *OpenTok) CreateSession(opts SessionOptions) (*Session, error) {
 	return &session, nil
 }
 
-func (ot *OpenTok) GenerateToken(sessionId string, opts TokenOptions) (*string, error) {
-	if sessionId == "" {
-		return nil, fmt.Errorf("Token cannot be generated without a sessionId")
+// GenerateToken generates a token for each user connecting to an OpenTok
+// session.
+func (ot *OpenTok) GenerateToken(sessionID string, opts *TokenOptions) (string, error) {
+	if sessionID == "" {
+		return "", fmt.Errorf("Token cannot be generated without a sessionID")
 	}
 
-	// validate the sessionId belongs to the apiKey of this OpenTok instance
-	if sessionIdInfo, err := decodeSessionId(sessionId); err != nil || sessionIdInfo.ApiKey != ot.apiKey {
-		return nil, fmt.Errorf("Token cannot be generated unless the session belongs to the API Key")
+	// validate the sessionID belongs to the apiKey of this OpenTok instance
+	if sessionIDInfo, err := decodeSessionID(sessionID); err != nil || sessionIDInfo.APIKey != ot.apiKey {
+		return "", fmt.Errorf("Token cannot be generated unless the session belongs to the API Key")
 	}
 
 	// create tokenData with given opts
 	now := time.Now().UTC()
 	rand.Seed(time.Now().UTC().UnixNano())
 	tokenData := map[string]string{
-		"session_id":                sessionId,
+		"session_id":                sessionID,
 		"create_time":               strconv.FormatInt(now.Unix(), 10),
 		"expire_time":               strconv.FormatInt(now.Add(24*time.Hour).Unix(), 10),
 		"nonce":                     fmt.Sprintf("%v", rand.Float64()),
@@ -175,7 +211,7 @@ func (ot *OpenTok) GenerateToken(sessionId string, opts TokenOptions) (*string, 
 	}
 
 	if opts.ExpireTime > 0 {
-		tokenData["expire_time"] = strconv.Itoa(opts.ExpireTime)
+		tokenData["expire_time"] = strconv.FormatInt(opts.ExpireTime, 10)
 	}
 
 	if len(opts.InitialLayoutClassList) > 0 {
@@ -184,44 +220,44 @@ func (ot *OpenTok) GenerateToken(sessionId string, opts TokenOptions) (*string, 
 
 	// validate tokenData
 	if tokenData["role"] != string(Publisher) && tokenData["role"] != string(Subscriber) && tokenData["role"] != string(Moderator) {
-		return nil, fmt.Errorf("Invalid role for token generation: %v", tokenData["role"])
+		return "", fmt.Errorf("Invalid role for token generation: %v", tokenData["role"])
 	}
 
 	if tokenData["expire_time"] < tokenData["create_time"] {
-		return nil, fmt.Errorf("Invalid expireTime for token generation, time cannot be in the past: %v < %v", tokenData["expire_time"], tokenData["create_time"])
+		return "", fmt.Errorf("Invalid expireTime for token generation, time cannot be in the past: %v < %v", tokenData["expire_time"], tokenData["create_time"])
 	}
 
 	if tokenData["connection_data"] != "" && len(tokenData["connection_data"]) > 1024 {
-		return nil, fmt.Errorf("Invalid data for token generation, must be a string with maximum length 1024")
+		return "", fmt.Errorf("Invalid data for token generation, must be a string with maximum length 1024")
 	}
 
 	if tokenData["initial_layout_class_list"] != "" && len(tokenData["initial_layout_class_list"]) > 1024 {
-		return nil, fmt.Errorf("Invalid initial layout class list for token generation, must have concatenated length of less than 1024")
+		return "", fmt.Errorf("Invalid initial layout class list for token generation, must have concatenated length of less than 1024")
 	}
 
 	return encodeToken(tokenData, ot)
 }
 
-func (s *Session) GenerateToken(opts TokenOptions) (*string, error) {
-	return s.OpenTok.GenerateToken(s.SessionId, opts)
+// GenerateToken generates a token for each user connecting to an OpenTok
+// session.
+func (s *Session) GenerateToken(opts *TokenOptions) (string, error) {
+	return s.OpenTok.GenerateToken(s.SessionID, opts)
 }
 
-/*
- * decodes a sessionId into the metadata that it contains
- */
-func decodeSessionId(sessionId string) (*SessionIdInfo, error) {
+// Decodes a sessionID into the metadata that it contains
+func decodeSessionID(sessionID string) (*SessionIDInfo, error) {
 	// remove sentinel
-	sessionId = sessionId[2:]
+	sessionID = sessionID[2:]
 
 	// replace invalid base64 chars
-	sessionId = strings.ReplaceAll(sessionId, "-", "+")
-	sessionId = strings.ReplaceAll(sessionId, "_", "/")
+	sessionID = strings.ReplaceAll(sessionID, "-", "+")
+	sessionID = strings.ReplaceAll(sessionID, "_", "/")
 
 	// base64 decode
-	decodedSessionId, _ := base64.StdEncoding.DecodeString(sessionId)
+	decodedSessionID, _ := base64.StdEncoding.DecodeString(sessionID)
 
 	// separate fields
-	fields := strings.Split(string(decodedSessionId), "~")
+	fields := strings.Split(string(decodedSessionID), "~")
 
 	ts, err := strconv.ParseInt(fields[3], 10, 64)
 	if err != nil {
@@ -231,19 +267,17 @@ func decodeSessionId(sessionId string) (*SessionIdInfo, error) {
 	sec := ts / 1000
 	nsec := ts % 1000 * 1000000
 
-	sessionIdInfo := &SessionIdInfo{
-		ApiKey:     fields[1],
+	sessionIDInfo := &SessionIDInfo{
+		APIKey:     fields[1],
 		Location:   fields[2],
 		CreateTime: time.Unix(sec, nsec),
 	}
 
-	return sessionIdInfo, nil
+	return sessionIDInfo, nil
 }
 
-/**
- * Encodes data for use as a token that can be used as the X-TB-TOKEN-AUTH header value in OpenTok REST APIs
- */
-func encodeToken(tokenData map[string]string, ot *OpenTok) (*string, error) {
+// Encodes data for use as a token that can be used as the X-TB-TOKEN-AUTH header value in OpenTok REST APIs
+func encodeToken(tokenData map[string]string, ot *OpenTok) (string, error) {
 	params := url.Values{}
 	params.Add("session_id", tokenData["session_id"])
 	params.Add("create_time", tokenData["create_time"])
@@ -258,16 +292,16 @@ func encodeToken(tokenData map[string]string, ot *OpenTok) (*string, error) {
 	h := hmac.New(sha1.New, []byte(ot.apiSecret))
 	n, err := h.Write([]byte(dataString))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	if n != len(dataString) {
-		return nil, fmt.Errorf("hmac not enough bytes written %d != %d", n, len(dataString))
+		return "", fmt.Errorf("hmac not enough bytes written %d != %d", n, len(dataString))
 	}
 
 	sig := fmt.Sprintf("%x:%s", h.Sum(nil), dataString)
 	decoded := "partner_id=" + ot.apiKey + "&sig=" + sig
-	token := TOKEN_SENTINEL + base64.StdEncoding.EncodeToString([]byte(decoded))
+	token := tokenSentinel + base64.StdEncoding.EncodeToString([]byte(decoded))
 
-	return &token, nil
+	return token, nil
 }

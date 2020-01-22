@@ -7,16 +7,19 @@ import (
 	"net/http"
 )
 
+// SignalData defines the type and data of signal
 type SignalData struct {
+	// The type of the signal.
+	// This is a string value that clients can filter on when listening for signals
 	Type string `json:"type"`
+
+	// The data of the signal
 	Data string `json:"data"`
 }
 
-/**
- * Send signals to all participants in an active OpenTok session
- */
-func (ot *OpenTok) SendSessionSignal(sessionId string, data SignalData) error {
-	if sessionId == "" {
+// SendSessionSignal send signals to all participants in an active OpenTok session.
+func (ot *OpenTok) SendSessionSignal(sessionID string, data *SignalData) error {
+	if sessionID == "" {
 		return fmt.Errorf("Signal cannot be sent without a session ID")
 	}
 
@@ -28,7 +31,7 @@ func (ot *OpenTok) SendSessionSignal(sessionId string, data SignalData) error {
 		return err
 	}
 
-	endpoint := apiHost + projectURL + "/" + ot.apiKey + "/session/" + sessionId + "/signal"
+	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/session/" + sessionID + "/signal"
 	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return err
@@ -36,6 +39,7 @@ func (ot *OpenTok) SendSessionSignal(sessionId string, data SignalData) error {
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
+	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -51,15 +55,13 @@ func (ot *OpenTok) SendSessionSignal(sessionId string, data SignalData) error {
 	return nil
 }
 
-/**
- * Send signals  to a specific client in an active OpenTok session
- */
-func (ot *OpenTok) SendConnectionSignal(sessionId, connectionId string, data SignalData) error {
-	if sessionId == "" {
+// SendConnectionSignal send signals to a specific client in an active OpenTok session
+func (ot *OpenTok) SendConnectionSignal(sessionID, connectionID string, data *SignalData) error {
+	if sessionID == "" {
 		return fmt.Errorf("Signal cannot be sent without a session ID")
 	}
 
-	if connectionId == "" {
+	if connectionID == "" {
 		return fmt.Errorf("Signal cannot be sent without a connection ID")
 	}
 
@@ -71,7 +73,7 @@ func (ot *OpenTok) SendConnectionSignal(sessionId, connectionId string, data Sig
 		return err
 	}
 
-	endpoint := apiHost + projectURL + "/" + ot.apiKey + "/session/" + sessionId + "/connection/" + connectionId + "/signal"
+	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/session/" + sessionID + "/connection/" + connectionID + "/signal"
 	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return err
@@ -79,6 +81,7 @@ func (ot *OpenTok) SendConnectionSignal(sessionId, connectionId string, data Sig
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
+	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
 	client := &http.Client{}
 	res, err := client.Do(req)

@@ -1,5 +1,11 @@
 # OpenTok Go SDK
 
+[![API Reference](https://godoc.org/github.com/calvertyang/opentok-go-sdk?status.svg)](https://godoc.org/github.com/calvertyang/opentok-go-sdk)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/calvertyang/opentok-go-sdk)](https://github.com/calvertyang/opentok-go-sdk/releases/latest)
+[![Build Status](https://travis-ci.org/calvertyang/opentok-go-sdk.svg?branch=master)](https://travis-ci.org/calvertyang/opentok-go-sdk)
+[![Go Report Card](https://goreportcard.com/badge/github.com/calvertyang/opentok-go-sdk)](https://goreportcard.com/report/github.com/calvertyang/opentok-go-sdk)
+[![license](https://img.shields.io/github/license/calvertyang/opentok-go-sdk.svg)](https://github.com/calvertyang/opentok-go-sdk/blob/master/LICENSE)
+
 The OpenTok Go SDK lets you generate
 [sessions](https://tokbox.com/developer/guides/create-session/) and
 [tokens](https://tokbox.com/developer/guides/create-token/) for
@@ -10,10 +16,20 @@ broadcasts](https://tokbox.com/developer/guides/broadcast/live-streaming/),
 working with OpenTok [SIP interconnect](https://tokbox.com/developer/guides/sip),
 and [disconnecting clients from sessions](https://tokbox.com/developer/guides/moderation/rest/).
 
-## Installation
+For usage and more information, please refer to [GoDoc](https://godoc.org/github.com/calvertyang/opentok-go-sdk).
+
+## Installing
+
+Use `go get` to retrieve the SDK to add it to your GOPATH workspace, or project's Go module dependencies.
 
 ```
 go get github.com/calvertyang/opentok-go-sdk
+```
+
+To update the SDK use `go get -u` to retrieve the latest version of the SDK.
+
+```
+go get -u github.com/calvertyang/opentok-go-sdk
 ```
 
 ## Usage
@@ -53,65 +69,61 @@ To create an OpenTok Session, use the `OpenTok.CreateSession(options)` method. T
 ```go
 // Create a session that will attempt to transmit streams directly between clients.
 // If clients cannot connect, the session uses the OpenTok TURN server:
-session, err := ot.CreateSession(opentok.SessionOptions{})
+session, err := ot.CreateSession(&opentok.SessionOptions{})
 
 // The session will the OpenTok Media Router:
-session, err := ot.CreateSession(opentok.SessionOptions{
+session, err := ot.CreateSession(&opentok.SessionOptions{
 	MediaMode: opentok.Routed,
 })
 
 // A Session with a location hint
-session, err := ot.CreateSession(opentok.SessionOptions{
+session, err := ot.CreateSession(&opentok.SessionOptions{
 	Location: "12.34.56.78",
 })
 
 // A Session with an automatic archiving
-session, err := ot.CreateSession(opentok.SessionOptions{
+session, err := ot.CreateSession(&opentok.SessionOptions{
 	ArchiveMode: opentok.AutoArchived,
 	MediaMode:   opentok.Routed,
 })
 ```
 
-The response data is a [session details object](#session-details-object).
-
 #### Generating Tokens
 
 Once a Session is created, you can start generating Tokens for clients to use when connecting to it.
-You can generate a token by calling the `OpenTok.GenerateToken(sessionId, options)` method, or by calling the `Session.GenerateToken(options)` method on the instance after creating it.
+You can generate a token by calling the `OpenTok.GenerateToken(sessionID, options)` method, or by calling the `Session.GenerateToken(options)` method on the instance after creating it.
 
 ```go
 // Generate a Token from just a session_id (fetched from a database)
-token, err := ot.GenerateToken(sessionId, opentok.TokenOptions{})
+token, err := ot.GenerateToken(sessionID, &opentok.TokenOptions{})
 
 // Generate a Token from a session object (returned from OpenTok.CreateSession)
-token, err := session.GenerateToken(opentok.TokenOptions{})
+token, err := session.GenerateToken(&opentok.TokenOptions{})
 
 // Set some options in a Token
-token, err := session.GenerateToken(opentok.TokenOptions{
+token, err := session.GenerateToken(&opentok.TokenOptions{
 	Role:                   opentok.Moderator,
-	ExpireTime:             int(time.Now().UTC().Add(7 * 24 * time.Hour).Unix()), // in one week
+	ExpireTime:             time.Now().UTC().Add(7 * 24 * time.Hour).Unix(), // in one week
 	Data:                   "name=Johnny",
 	InitialLayoutClassList: []string{"focus"},
 })
 ```
 
-The response data is a string of token.
-
 #### Sending signals
 
-You can send a signal to all participants in an OpenTok Session by calling the `OpenTok.SendSessionSignal(sessionId, signalData)` method.
+You can send a signal to all participants in an OpenTok Session by calling the `OpenTok.SendSessionSignal(sessionID, signalData)` method.
 
 ```go
-err := ot.SendSessionSignal(sessionId, opentok.SignalData{
+err := ot.SendSessionSignal(sessionID, &opentok.SignalData{
 	Type: "foo",
 	Data: "bar",
 })
 ```
 
-Or send a signal to a specific participant in the session by calling the `OpenTok.SendConnectionSignal(sessionId, connectionId, signalData)` method.
+Or send a signal to a specific participant in the session by calling the `OpenTok.SendConnectionSignal(sessionID, connectionID, signalData)` method.
 
 ```go
-err := ot.SendConnectionSignal(sessionId, connectionId, opentok.SignalData{
+err := ot.SendConnectionSignal(sessionID, connectionID, &opentok.SignalData{
 	Type: "foo",
 	Data: "bar",
 })
@@ -121,10 +133,10 @@ This is the server-side equivalent to the signal() method in the OpenTok client 
 
 #### Disconnecting participants
 
-You can disconnect participants from an OpenTok Session using the `OpenTok.ForceDisconnect(sessionId, connectionId)` method.
+You can disconnect participants from an OpenTok Session using the `OpenTok.ForceDisconnect(sessionID, connectionID)` method.
 
 ```go
-err := ot.ForceDisconnect(sessionId, connectionId)
+err := ot.ForceDisconnect(sessionID, connectionID)
 ```
 
 This is the server-side equivalent to the forceDisconnect() method in OpenTok.js: https://www.tokbox.com/developer/guides/moderation/js/#force_disconnect.
@@ -133,16 +145,16 @@ This is the server-side equivalent to the forceDisconnect() method in OpenTok.js
 
 You can get information on an active stream in an OpenTok session
 
-To get information on all streams in a session, call `OpenTok.ListStreams(sessionId)`.
+To get information on all streams in a session, call `OpenTok.ListStreams(sessionID)`.
 
 ```go
-streams, err := ot.ListStreams(sessionId)
+streams, err := ot.ListStreams(sessionID)
 ```
 
-To get information of a specific stream in a session, call `OpenTok.GetStream(sessionId, streamId)`.
+To get information of a specific stream in a session, call `OpenTok.GetStream(sessionID, streamID)`.
 
 ```go
-stream, err := ot.GetStream(sessionId, streamId)
+stream, err := ot.GetStream(sessionID, streamID)
 ```
 
 ---
@@ -151,14 +163,14 @@ stream, err := ot.GetStream(sessionId, streamId)
 
 You can only record archives of sessions that use the OpenTok Media Router (with the media mode set to routed).
 
-You can start the recording of an OpenTok Session using the `OpenTok.StartArchive(sessionId, options)` method. Note that you can only start an Archive on a Session that has clients connected.
+You can start the recording of an OpenTok Session using the `OpenTok.StartArchive(sessionID, options)` method. Note that you can only start an Archive on a Session that has clients connected.
 
 ```go
 // Start an archive
-archive, err := ot.StartArchive(sessionId, opentok.ArchiveOptions{})
+archive, err := ot.StartArchive(sessionID, &opentok.ArchiveOptions{})
 
 // Start a named Archive
-archive, err := ot.StartArchive(sessionId, opentok.ArchiveOptions{
+archive, err := ot.StartArchive(sessionID, &opentok.ArchiveOptions{
 	Name: "Important Presentation",
 })
 ```
@@ -167,7 +179,7 @@ You can also disable audio or video recording by setting the `HasAudio` or `HasV
 
 ```go
 // Start an audio-only Archive
-archive, err := ot.StartArchive(sessionId, opentok.ArchiveOptions{
+archive, err := ot.StartArchive(sessionID, &opentok.ArchiveOptions{
 	Name:     "Important Presentation",
 	HasVideo: false,
 })
@@ -177,7 +189,7 @@ By default, all streams are recorded to a single (composed) file. You can record
 
 ```go
 // Start an Archive with individual output mode
-archive, err := ot.StartArchive(sessionId, opentok.ArchiveOptions{
+archive, err := ot.StartArchive(sessionID, &opentok.ArchiveOptions{
 	Name:       "Important Presentation",
 	OutputMode: opentok.Individual,
 })
@@ -187,33 +199,33 @@ For composed archives you can set the resolution of the archive, either SD ("640
 
 ```go
 // Start an Archive with HD resolution
-archive, err := ot.StartArchive(sessionId, opentok.ArchiveOptions{
+archive, err := ot.StartArchive(sessionID, &opentok.ArchiveOptions{
 	Name:       "Important Presentation",
 	Resolution: opentok.HD,
 })
 ```
 
-You can stop the recording of a started Archive using the `OpenTok.StopArchive(archiveId)` method. You can also do this using the `Archive.Stop()` method on the Archive instance.
+You can stop the recording of a started Archive using the `OpenTok.StopArchive(archiveID)` method. You can also do this using the `Archive.Stop()` method on the Archive instance.
 
 ```go
-// Stop an Archive from an archiveId (fetched from database)
-result, err := ot.StopArchive(archiveId)
+// Stop an Archive from an archiveID (fetched from database)
+result, err := ot.StopArchive(archiveID)
 
 // Stop an Archive from an instance (returned from Opentok.StartArchive)
 result, err := archive.Stop()
 ```
 
-To get an `OpenTok.Archive` instance (and all the information about it) from an archiveId, use the `OpenTok.GetArchive(archiveId)` method.
+To get an `OpenTok.Archive` instance (and all the information about it) from an archiveID, use the `OpenTok.GetArchive(archiveID)` method.
 
 ```go
-archive, err := ot.GetArchive(archiveId)
+archive, err := ot.GetArchive(archiveID)
 ```
 
-To delete an Archive, you can call the `OpenTok.deleteArchive(archiveId)` method or the `Delete()` method of an `OpenTok.Archive` instance.
+To delete an Archive, you can call the `OpenTok.deleteArchive(archiveID)` method or the `Delete()` method of an `OpenTok.Archive` instance.
 
 ```go
-// Delete an Archive from an archiveId (fetched from database)
-err := ot.DeleteArchive(archiveId)
+// Delete an Archive from an archiveID (fetched from database)
+err := ot.DeleteArchive(archiveID)
 
 // Delete an Archive from an Archive instance, returned from the OpenTok.StartArchive(),
 // OpenTok.GetArchive(), or OpenTok.ListArchives() methods
@@ -224,14 +236,14 @@ You can also get a list of all the Archives you've created (up to 1000) with you
 
 ```go
 // Paginate through the results via offset by 100 and count by 50
-archives, err := ot.ListArchives(opentok.ArchiveListOptions{
+archives, err := ot.ListArchives(&opentok.ArchiveListOptions{
 	Offset: 100,
 	Count:  50,
 })
 
 // List archives for a specific session ID
-archives, err := ot.ListArchives(opentok.ArchiveListOptions{
-	SessionId: "2_MX4xMDB-flR1-QxNzIxNX4",
+archives, err := ot.ListArchives(&opentok.ArchiveListOptions{
+	SessionID: "2_MX4xMDB-flR1-QxNzIxNX4",
 })
 ```
 
@@ -242,7 +254,7 @@ For an OpenTok project, you can have OpenTok upload completed archives to an Ama
 ```go
 // Set an archive upload target to Amazon S3 and prevents archive files from
 // being stored in the OpenTok cloud if the upload fails.
-result, err := ot.SetArchiveStorage(opentok.StorageOptions{
+result, err := ot.SetArchiveStorage(&opentok.StorageOptions{
 	Type: "s3",
 	Config: opentok.AmazonS3Config{
 		AccessKey: "myUsername",
@@ -253,7 +265,7 @@ result, err := ot.SetArchiveStorage(opentok.StorageOptions{
 })
 
 // Set an archive upload target to an S3-compliant storage provider
-result, err := ot.SetArchiveStorage(opentok.StorageOptions{
+result, err := ot.SetArchiveStorage(&opentok.StorageOptions{
 	Type: "s3",
 	Config: opentok.AmazonS3Config{
 		AccessKey: "myUsername",
@@ -264,7 +276,7 @@ result, err := ot.SetArchiveStorage(opentok.StorageOptions{
 })
 
 // Set an archive upload target to Microsoft Azure
-result, err := ot.SetArchiveStorage(opentok.StorageOptions{
+result, err := ot.SetArchiveStorage(&opentok.StorageOptions{
 	Type: "azure",
 	Config: opentok.AzureConfig{
 		AccountName: "myAccountname",
@@ -282,10 +294,10 @@ Once the archive upload target is set for a project, you can also delete it by c
 err := ot.DeleteArchiveStorage()
 ```
 
-For composed archives, you can change the layout dynamically, using the `OpenTok.SetArchiveLayout(archiveId, layoutOptions)` method.
+For composed archives, you can change the layout dynamically, using the `OpenTok.SetArchiveLayout(archiveID, layoutOptions)` method.
 
 ```go
-archive, err := ot.SetArchiveLayout(archiveId, opentok.Layout{
+archive, err := ot.SetArchiveLayout(archiveID, &opentok.Layout{
 	Type: opentok.PIP,
 })
 ```
@@ -297,8 +309,8 @@ archive, err := ot.SetArchiveLayout(archiveId, opentok.Layout{
 You can add an audio-only stream from an external third-party SIP gateway using the SIP Interconnect feature. This requires a SIP URI, the session ID you wish to add the audio-only stream to.
 
 ```go
-sipCall, err := ot.Dial(sessionId, opentok.DialOptions{
-	SIP: opentok.SIP{
+sipCall, err := ot.Dial(sessionID, &opentok.DialOptions{
+	SIP: &opentok.SIP{
 		URI: "sip:user@sip.partner.com;transport=tls",
 		From: "from@example.com",
 		Headers: &opentok.SIPHeaders{
@@ -319,25 +331,25 @@ sipCall, err := ot.Dial(sessionId, opentok.DialOptions{
 
 _Important_: Only [routed OpenTok sessions](https://tokbox.com/developer/guides/create-session/#media-mode) support live streaming broadcasts.
 
-To start a [live streaming broadcast](https://tokbox.com/developer/guides/broadcast/live-streaming) of an OpenTok session, call the `OpenTok.StartBroadcast(sessionId, options)` method.
+To start a [live streaming broadcast](https://tokbox.com/developer/guides/broadcast/live-streaming) of an OpenTok session, call the `OpenTok.StartBroadcast(sessionID, options)` method.
 
 ```go
-broadcast, err := ot.StartBroadcast(sessionId, opentok.BroadcastOptions{
+broadcast, err := ot.StartBroadcast(sessionID, &opentok.BroadcastOptions{
 	Layout: &opentok.Layout{
 		Type: opentok.VerticalPresentation,
 	},
 	MaxDuration: 5400,
-	Outputs: opentok.BroadcastOutputOptions{
-		HLS:  opentok.HLSConfig{},
+	Outputs: &opentok.BroadcastOutputOptions{
+		HLS:  &opentok.HLSConfig{},
 		RTMP: []*opentok.RTMPConfig{
 			&opentok.RTMPConfig{
-				Id:         "foo",
-				ServerUrl:  "rtmps://myfooserver/myfooapp",
+				ID:         "foo",
+				ServerURL:  "rtmps://myfooserver/myfooapp",
 				StreamName: "myfoostream",
 			},
 			&opentok.RTMPConfig{
-				Id:         "bar",
-				ServerUrl:  "rtmp://mybarserver/mybarapp",
+				ID:         "bar",
+				ServerURL:  "rtmp://mybarserver/mybarapp",
 				StreamName: "mybarstream",
 			},
 		},
@@ -348,54 +360,54 @@ broadcast, err := ot.StartBroadcast(sessionId, opentok.BroadcastOptions{
 
 See the API reference for details on the `options` parameter.
 
-Call the `OpenTok.StopBroadcast(broadcastId)` method to stop a live streaming broadcast.
+Call the `OpenTok.StopBroadcast(broadcastID)` method to stop a live streaming broadcast.
 
 ```go
-broadcast, err := ot.StopBroadcast(broadcastId)
+broadcast, err := ot.StopBroadcast(broadcastID)
 ```
 
 You can also call the `Stop()` method of the Broadcast instance to stop a broadcast.
 
 ```go
-broadcast, err := ot.StopBroadcast(broadcastId)
+broadcast, err := ot.StopBroadcast(broadcastID)
 ```
 
-Call the `Opentok.GetBroadcast(broadcastId)` method, to get a Broadcast instance.
+Call the `Opentok.GetBroadcast(broadcastID)` method, to get a Broadcast instance.
 
 ```go
-broadcast, err := ot.GetBroadcast(broadcastId)
+broadcast, err := ot.GetBroadcast(broadcastID)
 ```
 
 You can also get a list of all the Broadcasts you've created (up to 1000) with your API Key. This is done using the `OpenTok.ListBroadcasts(options)` method.
 
 ```go
 // Paginate through the results via offset by 100 and count by 50
-broadcasts, err := ot.ListBroadcasts(opentok.BroadcastListOptions{
+broadcasts, err := ot.ListBroadcasts(&opentok.BroadcastListOptions{
 	Offset: 100,
 	Count:  50,
 })
 
 // List broadcasts for a specific session ID
-broadcasts, err := ot.ListBroadcasts(opentok.BroadcastListOptions{
-	SessionId: "2_MX4xMDB-flR1-QxNzIxNX4",
+broadcasts, err := ot.ListBroadcasts(&opentok.BroadcastListOptions{
+	SessionID: "2_MX4xMDB-flR1-QxNzIxNX4",
 })
 ```
 
-To change the broadcast layout, call the `OpenTok.SetBroadcastLayout(broadcastId, layoutOptions)` method.
+To change the broadcast layout, call the `OpenTok.SetBroadcastLayout(broadcastID, layoutOptions)` method.
 
 ```go
-broadcast, err := ot.SetBroadcastLayout(broadcastId, opentok.Layout{
+broadcast, err := ot.SetBroadcastLayout(broadcastID, &opentok.Layout{
 	Type: opentok.PIP,
 })
 ```
 
-You can set the initial layout class for a client's streams by setting the layout option when you create the token for the client, using the `OpenTok.generateToken()` method. And you can change the layout classes for streams in a session by calling the `OpenTok.SetStreamClassLists(sessionId, options)` method.
+You can set the initial layout class for a client's streams by setting the layout option when you create the token for the client, using the `OpenTok.generateToken()` method. And you can change the layout classes for streams in a session by calling the `OpenTok.SetStreamClassLists(sessionID, options)` method.
 
 ```go
-streams, err := ot.SetStreamClassLists(sessionId, opentok.StreamClassOptions{
+streams, err := ot.SetStreamClassLists(sessionID, &opentok.StreamClassOptions{
 	Items: []*opentok.StreamClass{
 		&opentok.StreamClass{
-			Id: "8b732909-0a06-46a2-8ea8-074e64d43422",
+			ID: "8b732909-0a06-46a2-8ea8-074e64d43422",
 			LayoutClassList: []string{"full"},
 		},
 	},
@@ -422,8 +434,6 @@ project, err := ot.CreateProject("")
 project, err := ot.CreateProject("foo")
 ```
 
-The response data is a [project details object](#project-details-object).
-
 #### Changing the status for a project API key
 
 Account administrators can use this method to change a project's status. The status is either active or suspended. If a project's status is suspended, you will not be able to use the project API key (and any OpenTok sessions created with it).
@@ -437,8 +447,6 @@ project, err := ot.ChangeProjectStatus("PROJECT_API_KEY", opentok.ProjectSuspend
 // Change the project status to active by project API key
 project, err := ot.ChangeProjectStatus("PROJECT_API_KEY", opentok.ProjectActive)
 ```
-
-The response data is a [project details object](#project-details-object).
 
 #### Deleting a project
 
@@ -464,8 +472,6 @@ projects, err := ot.ListProjects()
 projects, err := ot.GetProject("PROJECT_API_KEY")
 ```
 
-The response data is an array of [project details object](#project-details-object).
-
 #### Generating a new project API secret
 
 For security reasons, you may want to generate a new API secret for a project.
@@ -474,339 +480,6 @@ For security reasons, you may want to generate a new API secret for a project.
 
 ```go
 project, err := ot.RefreshProjectSecret("PROJECT_API_KEY")
-```
-
-The response data is a [project details object](#project-details-object).
-
----
-
-### Responses
-
-#### Session
-
-```go
-type Session struct {
-	// The session id of the project
-	SessionId string
-	// The OpenTok project API key
-	ProjectId string
-	// The creation date
-	CreateDt string
-	// The URL of the OpenTok media router used by the session
-	MediaServerURL string
-	// The instance of OpenTok
-	OpenTok *OpenTok
-}
-```
-
-#### Project
-
-```go
-type Project struct {
-	// The OpenTok project API key
-	Id string
-	// The OpenTok account id
-	UserId int
-	// The OpenTok project API secret
-	Secret string
-	// Whether the project is active ("VALID", "ACTIVE") or suspended ("SUSPENDED").
-	Status string
-	// The OpenTok account status
-	UserStatus string
-	// The name, if you specified one when creating the project; or an empty string if you did not specify a name
-	Name string
-	// The OpenTok account email
-	ContactEmail string
-	// The time at which the project was created (a UNIX timestamp, in milliseconds)
-	CreatedAt int
-	// The time at which the project was updated (a UNIX timestamp, in milliseconds)
-	UpdatedAt int
-	// The environment id that project is running on
-	EnvironmentId int
-	// The environment name that project is running on
-	EnvironmentName string
-	// The environment description that project is running on
-	EnvironmentDescription string
-	// The OpenTok project API key
-	ApiKey string
-}
-```
-
-#### Archive
-
-```go
-type Archive struct {
-	// The time at which the archive was created, in milliseconds since the UNIX epoch.
-	CreatedAt int
-	// The duration of the archive, in milliseconds.
-	Duration int
-	// Whether the archive has an audio track or not.
-	HasAudio bool
-	// Whether the archive has an video track or not.
-	HasVideo bool
-	// The unique archive ID.
-	Id string
-	// The name of the archive.
-	Name *string
-	// The output mode to be generated for this archive.
-	OutputMode ArchiveOutputMode
-	// The API key associated with the archive.
-	ProjectId int
-	// This string describes the reason the archive stopped or failed.
-	Reason string
-	// The resolution of the archive.
-	Resolution Resolution
-	// The session ID of the OpenTok session associated with this archive.
-	SessionId string
-	// The size of the MP4 file.
-	Size int
-	// The status of the archive.
-	Status string
-	// The download URL of the available MP4 file.
-	Url *string
-	// The instance of OpenTok
-	OpenTok *OpenTok
-}
-```
-
-#### Archive List
-
-```go
-type ArchiveList struct {
-	// The total number of archives for the API key.
-	Count int
-	// An array of archive defining each archive retrieved.
-	Items []*Archive
-}
-```
-
-#### Archive Storage Options
-
-```go
-type StorageOptions struct {
-	// Type of storage.
-	Type string
-	// Settings for the storage.
-	Config interface{}
-	// Error handling method if upload fails.
-	Fallback string
-}
-```
-
-#### Stream
-
-```go
-type Stream struct {
-	// The unique stream ID.
-	Id string
-	// Either "camera" or "screen".
-	VideoType string
-	// The stream name.
-	Name string
-	// An array of the layout classes for the stream.
-	LayoutClassList []string
-}
-```
-
-#### Stream List
-
-```go
-type StreamList struct {
-	// The total number of streams for the session.
-	Count int
-	// An array of stream defining each stream retrieved.
-	Items []*Stream
-}
-```
-
-#### Broadcast
-
-```go
-type Broadcast struct {
-	// The unique ID for the broadcast.
-	Id string
-	// The OpenTok session ID.
-	SessionId string
-	// The API key associated with the broadcast..
-	ProjectId int
-	// The time at which the broadcast was created, in milliseconds since the UNIX epoch.
-	CreatedAt int
-	// The time at which the broadcast was updated, in milliseconds since the UNIX epoch.
-	UpdatedAt int
-	// The resolution of the broadcast.
-	Resolution Resolution
-	// The status of the broadcast.
-	Status string
-	// An object containing details about the HLS and RTMP broadcasts.
-	BroadcastUrls BroadcastUrls
-	// The instance of OpenTok
-	OpenTok *OpenTok
-}
-```
-
-#### Broadcast List
-
-```go
-type BroadcastList struct {
-	// The total number of broadcasts for the session.
-	Count int
-	// An array of broadcast defining each broadcast retrieved.
-	Items []*Broadcast
-}
-```
-
-#### SIP Call
-
-```go
-type SIPCall struct {
-	// A unique ID for the SIP call.
-	Id string
-	// The OpenTok connection ID for the SIP call's connection in the OpenTok session.
-	ConnectionId string
-	// The OpenTok stream ID for the SIP call's stream in the OpenTok session.
-	StreamId string
-}
-```
-
----
-
-### Type Definition
-
-#### Project Status
-
-```go
-type ProjectStatus string
-
-const (
-	/**
-	 * Set to ACTIVE to use the project API key.
-	 */
-	ProjectActive ProjectStatus = "ACTIVE"
-	/**
-	 * Set to SUSPENDED, you will not be able to use the project API key (and any OpenTok sessions created with it).
-	 */
-	ProjectSuspended ProjectStatus = "SUSPENDED"
-)
-```
-
-#### Archive Mode
-
-```go
-type ArchiveMode string
-
-const (
-	/**
-	 * Set to always to have the session archived automatically.
-	 */
-	AutoArchived ArchiveMode = "always"
-	/**
-	 * Set to manual (the default), you can archive the session by calling the REST /archive POST method
-	 */
-	ManualArchived ArchiveMode = "manual"
-)
-```
-
-#### Media Mode
-
-```go
-type MediaMode string
-
-const (
-	/**
-	 * Set to enabled if you prefer clients to attempt to send audio-video streams directly to other clients
-	 */
-	Relayed MediaMode = "enabled"
-	/**
-	 * Set to disabled for sessions that use the OpenTok Media Router
-	 */
-	Routed MediaMode = "disabled"
-)
-```
-
-#### Role
-
-```go
-type Role string
-
-const (
-	/**
-	 * A publisher can publish streams, subscribe to streams, and signal.
-	 */
-	Publisher Role = "publisher"
-	/**
-	 * A subscriber can only subscribe to streams.
-	 */
-	Subscriber Role = "subscriber"
-	/**
-	 * In addition to the privileges granted to a publisher, in clients using
-	 * the OpenTok.js library, a moderator can call the forceUnpublish() and
-	 * forceDisconnect() method of the Session object.
-	 */
-	Moderator Role = "moderator"
-)
-```
-
-#### Layout Type
-
-```go
-type LayoutType string
-
-const (
-	/**
-	 * This is a tiled layout, which scales according to the number of videos.
-	 */
-	BestFit LayoutType = "bestFit"
-	/**
-	 * This is a picture-in-picture layout, where a small stream is visible over
-	 * a full-size stream.
-	 */
-	PIP LayoutType = "pip"
-	/**
-	 * This is a layout with one large stream on the right edge of the output,
-	 * and several smaller streams along the left edge of the output.
-	 */
-	VerticalPresentation LayoutType = "verticalPresentation"
-	/**
-	 * This is a layout with one large stream on the top edge of the output,
-	 * and several smaller streams along the bottom edge of the output.
-	 */
-	HorizontalPresentation LayoutType = "horizontalPresentation"
-	/**
-	 * To use a custom layout, set the type property for the layout to "custom"
-	 * and set an additional property, stylesheet, which is set to the CSS.
-	 */
-	Custom LayoutType = "custom"
-)
-```
-
-#### Archive Output Mode
-
-```go
-type ArchiveOutputMode string
-
-const (
-	/**
-	 * The archive is a single MP4 file composed of all streams.
-	 */
-	Composed ArchiveOutputMode = "composed"
-	/**
-	 * The archive is a ZIP container file with multiple individual media files
-	 * for each stream, and a JSON metadata file for video synchronization.
-	 */
-	Individual ArchiveOutputMode = "individual"
-)
-```
-
-#### Resolution
-
-```go
-type Resolution string
-
-const (
-	// The resolution of the archive.
-	SD Resolution = "640x480"
-	HD Resolution = "1280x720"
-)
 ```
 
 ## Requirements

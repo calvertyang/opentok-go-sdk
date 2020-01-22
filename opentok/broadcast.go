@@ -9,62 +9,125 @@ import (
 	"strings"
 )
 
+// HLSConfig defines the config of HLS.
 type HLSConfig struct{}
 
+// RTMPConfig defines the config of RTMP.
 type RTMPConfig struct {
-	Id         string `json:"id"`
-	Status     string `json:"status,omitempty"`
-	ServerUrl  string `json:"serverUrl"`
+	// An unique ID for the stream.
+	ID string `json:"id"`
+
+	// RTMP stream status returned in the response.
+	Status string `json:"status,omitempty"`
+
+	// The RTMP server URL.
+	ServerURL string `json:"serverUrl"`
+
+	// The stream name, such as the YouTube Live stream name or the Facebook
+	// stream key.
 	StreamName string `json:"streamName"`
 }
 
+// BroadcastOutputOptions defines the types of broadcast streams you want to
+// start (both HLS and RTMP).
 type BroadcastOutputOptions struct {
-	HLS  *HLSConfig    `json:"hls,omitempty"`
+	// Set this property to an empty object for HLS.
+	// The HLS URL is returned in the response and in the REST method for getting
+	// information about a live streaming broadcast.
+	HLS *HLSConfig `json:"hls,omitempty"`
+
+	// The configuration of RTMP
 	RTMP []*RTMPConfig `json:"rtmp,omitempty"`
 }
 
+// BroadcastOptions defines the options for live streaming broadcast.
 type BroadcastOptions struct {
-	SessionId   string                 `json:"sessionId"`
-	Layout      *Layout                `json:"layout,omitempty"`
-	MaxDuration int                    `json:"maxDuration,omitempty"`
-	Outputs     BroadcastOutputOptions `json:"outputs"`
-	Resolution  Resolution             `json:"resolution,omitempty"`
+	// The OpenTok session you want to broadcast.
+	SessionID string `json:"sessionId"`
+
+	// Specify this to assign the initial layout type for the broadcast.
+	Layout *Layout `json:"layout,omitempty"`
+
+	// The maximum duration for the broadcast, in seconds.
+	MaxDuration int `json:"maxDuration,omitempty"`
+
+	// This object defines the types of broadcast streams you want to start
+	// (both HLS and RTMP).
+	Outputs *BroadcastOutputOptions `json:"outputs"`
+
+	// The resolution of the broadcast: either SD(default) or HD.
+	Resolution Resolution `json:"resolution,omitempty"`
 }
 
-type BroadcastUrls struct {
-	HLS  string        `json:"hls"`
+// BroadcastURLs defines the details on the HLS and RTMP broadcast streams.
+type BroadcastURLs struct {
+	// HLS broadcast streams URL.
+	HLS string `json:"hls"`
+
+	// The configuration of RTMP.
 	RTMP []*RTMPConfig `json:rtmp`
 }
 
+// Broadcast defines the response returned from API.
 type Broadcast struct {
-	Id            string        `json:"id"`            // The unique ID for the broadcast.
-	SessionId     string        `json:"sessionId"`     // The OpenTok session ID.
-	ProjectId     int           `json:"projectId"`     // The API key associated with the broadcast..
-	CreatedAt     int           `json:"createdAt"`     // The time at which the broadcast was created, in milliseconds since the UNIX epoch.
-	UpdatedAt     int           `json:"updatedAt"`     // The time at which the broadcast was updated, in milliseconds since the UNIX epoch.
-	Resolution    Resolution    `json:"resolution"`    // The resolution of the broadcast.
-	Status        string        `json:"status"`        // The status of the broadcast.
-	BroadcastUrls BroadcastUrls `json:"broadcastUrls"` // An object containing details about the HLS and RTMP broadcasts.
-	OpenTok       *OpenTok      `json:"-"`
+	// The unique ID for the broadcast.
+	ID string `json:"id"`
+
+	// The OpenTok session ID.
+	SessionID string `json:"sessionId"`
+
+	// The API key associated with the broadcast..
+	ProjectID int `json:"projectId"`
+
+	// The time at which the broadcast was created, in milliseconds since the
+	// UNIX epoch.
+	CreatedAt int `json:"createdAt"`
+
+	// The time at which the broadcast was updated, in milliseconds since the
+	// UNIX epoch.
+	UpdatedAt int `json:"updatedAt"`
+
+	// The resolution of the broadcast.
+	Resolution Resolution `json:"resolution"`
+
+	// The status of the broadcast.
+	Status string `json:"status"`
+
+	// An object containing details about the HLS and RTMP broadcasts.
+	BroadcastURLs *BroadcastURLs `json:"broadcastUrls"`
+
+	// The instance of OpenTok
+	OpenTok *OpenTok `json:"-"`
 }
 
+// BroadcastListOptions defines the query parameters to filter the list of
+// broadcasts.
 type BroadcastListOptions struct {
-	Offset    int
-	Count     int
-	SessionId string
+	// The start offset in the list of existing broadcasts.
+	Offset int
+
+	// The number of broadcasts to retrieve starting at offset.
+	Count int
+
+	// Retrive only broadcasts for a given session ID.
+	SessionID string
 }
 
+// BroadcastList defines the response returned from API.
 type BroadcastList struct {
-	Count int          `json:"count"`
+	// The total number of broadcasts in the results.
+	Count int `json:"count"`
+
+	// An array of objects defining each broadcast retrieved.
+	// Broadcasts are listed from the newest to the oldest in the return set.
 	Items []*Broadcast `json:"items"`
 }
 
-/**
- * Use this method to start a live streaming for an OpenTok session.
- * This broadcasts the session to an HLS (HTTP live streaming) or to RTMP streams.
- */
-func (ot *OpenTok) StartBroadcast(sessionId string, opts BroadcastOptions) (*Broadcast, error) {
-	opts.SessionId = sessionId
+// StartBroadcast starts a live streaming for an OpenTok session.
+// This broadcasts the session to an HLS (HTTP live streaming) or to RTMP
+// streams.
+func (ot *OpenTok) StartBroadcast(sessionID string, opts *BroadcastOptions) (*Broadcast, error) {
+	opts.SessionID = sessionID
 
 	if opts.Layout != nil {
 		if opts.Layout.Type != BestFit && opts.Layout.Type != PIP && opts.Layout.Type != Custom &&
@@ -94,7 +157,7 @@ func (ot *OpenTok) StartBroadcast(sessionId string, opts BroadcastOptions) (*Bro
 		return nil, err
 	}
 
-	endpoint := apiHost + projectURL + "/" + ot.apiKey + "/broadcast"
+	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/broadcast"
 	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return nil, err
@@ -102,6 +165,7 @@ func (ot *OpenTok) StartBroadcast(sessionId string, opts BroadcastOptions) (*Bro
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
+	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -124,12 +188,10 @@ func (ot *OpenTok) StartBroadcast(sessionId string, opts BroadcastOptions) (*Bro
 	return broadcast, nil
 }
 
-/**
- * Use this method to stop a live broadcast of an OpenTok session.
- * Note that broadcasts automatically stop 120 minutes after they are started.
- */
-func (ot *OpenTok) StopBroadcast(broadcastId string) (*Broadcast, error) {
-	if broadcastId == "" {
+// StopBroadcast stops a live broadcast of an OpenTok session.
+// Note that broadcasts automatically stop 120 minutes after they are started.
+func (ot *OpenTok) StopBroadcast(broadcastID string) (*Broadcast, error) {
+	if broadcastID == "" {
 		return nil, fmt.Errorf("Live stremaing broadcast cannot be stopped without an broadcast ID")
 	}
 
@@ -139,13 +201,14 @@ func (ot *OpenTok) StopBroadcast(broadcastId string) (*Broadcast, error) {
 		return nil, err
 	}
 
-	endpoint := apiHost + projectURL + "/" + ot.apiKey + "/broadcast/" + broadcastId + "/stop"
+	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/broadcast/" + broadcastID + "/stop"
 	req, err := http.NewRequest("POST", endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
+	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -168,11 +231,10 @@ func (ot *OpenTok) StopBroadcast(broadcastId string) (*Broadcast, error) {
 	return broadcast, nil
 }
 
-/**
- * Get details on broadcasts that are in progress and started.
- * Completed broadcasts are not included in the listing.
- */
-func (ot *OpenTok) ListBroadcasts(opts BroadcastListOptions) (*BroadcastList, error) {
+// ListBroadcasts returns the records of all broadcasts for your project that
+// are in progress and started. Completed broadcasts are not included in the
+// listing.
+func (ot *OpenTok) ListBroadcasts(opts *BroadcastListOptions) (*BroadcastList, error) {
 	params := []string{"?"}
 
 	if opts.Offset != 0 {
@@ -183,8 +245,8 @@ func (ot *OpenTok) ListBroadcasts(opts BroadcastListOptions) (*BroadcastList, er
 		params = append(params, "count="+strconv.Itoa(opts.Count))
 	}
 
-	if opts.SessionId != "" {
-		params = append(params, "sessionId="+opts.SessionId)
+	if opts.SessionID != "" {
+		params = append(params, "sessionId="+opts.SessionID)
 	}
 
 	//Create jwt token
@@ -193,13 +255,14 @@ func (ot *OpenTok) ListBroadcasts(opts BroadcastListOptions) (*BroadcastList, er
 		return nil, err
 	}
 
-	endpoint := apiHost + projectURL + "/" + ot.apiKey + "/broadcast" + strings.Join(params, "&")
+	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/broadcast" + strings.Join(params, "&")
 	req, err := http.NewRequest("GET", endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
+	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -224,11 +287,9 @@ func (ot *OpenTok) ListBroadcasts(opts BroadcastListOptions) (*BroadcastList, er
 	return broadcastList, nil
 }
 
-/**
- * Get details on a broadcast that is in-progress.
- */
-func (ot *OpenTok) GetBroadcast(broadcastId string) (*Broadcast, error) {
-	if broadcastId == "" {
+// GetBroadcast returns a broadcast that is in-progress.
+func (ot *OpenTok) GetBroadcast(broadcastID string) (*Broadcast, error) {
+	if broadcastID == "" {
 		return nil, fmt.Errorf("Cannot get broadcast information without an broadcast ID")
 	}
 
@@ -238,13 +299,14 @@ func (ot *OpenTok) GetBroadcast(broadcastId string) (*Broadcast, error) {
 		return nil, err
 	}
 
-	endpoint := apiHost + projectURL + "/" + ot.apiKey + "/broadcast/" + broadcastId
+	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/broadcast/" + broadcastID
 	req, err := http.NewRequest("GET", endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
+	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -267,11 +329,10 @@ func (ot *OpenTok) GetBroadcast(broadcastId string) (*Broadcast, error) {
 	return broadcast, nil
 }
 
-/**
- * Dynamically change the layout type of a live streaming broadcast.
- */
-func (ot *OpenTok) SetBroadcastLayout(broadcastId string, layout Layout) (*Broadcast, error) {
-	if broadcastId == "" {
+// SetBroadcastLayout dynamically changes the layout type of a live streaming
+// broadcast.
+func (ot *OpenTok) SetBroadcastLayout(broadcastID string, layout *Layout) (*Broadcast, error) {
+	if broadcastID == "" {
 		return nil, fmt.Errorf("Cannot change the layout type of a live streaming broadcast without an broadcast ID")
 	}
 
@@ -297,7 +358,7 @@ func (ot *OpenTok) SetBroadcastLayout(broadcastId string, layout Layout) (*Broad
 		return nil, err
 	}
 
-	endpoint := apiHost + projectURL + "/" + ot.apiKey + "/broadcast/" + broadcastId + "/layout"
+	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/broadcast/" + broadcastID + "/layout"
 	req, err := http.NewRequest("PUT", endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return nil, err
@@ -305,6 +366,7 @@ func (ot *OpenTok) SetBroadcastLayout(broadcastId string, layout Layout) (*Broad
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
+	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -327,6 +389,7 @@ func (ot *OpenTok) SetBroadcastLayout(broadcastId string, layout Layout) (*Broad
 	return broadcast, nil
 }
 
+// Stop stops a live broadcast of an OpenTok session.
 func (broadcast *Broadcast) Stop() (*Broadcast, error) {
-	return broadcast.OpenTok.StopBroadcast(broadcast.Id)
+	return broadcast.OpenTok.StopBroadcast(broadcast.ID)
 }

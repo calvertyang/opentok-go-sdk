@@ -1,38 +1,52 @@
 package opentok
 
 import (
+	"fmt"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 )
 
-const apiHost = "https://api.opentok.com"
+// OpenTok API host URL
+const defaultAPIHost = "https://api.opentok.com"
 
-const TOKEN_SENTINEL = "T1=="
+// For use in X-TB-TOKEN-AUTH header value
+const tokenSentinel = "T1=="
 
 type issueType string
 
 const (
-	/**
-	 * For most REST API calls, set issue type to "project"
-	 */
+	// For most REST API calls, set issue type to "project"
 	projectToken issueType = "project"
-	/**
-	 * For Account Management REST methods, set issue type to "account"
-	 */
+	// For Account Management REST methods, set issue type to "account"
 	accountToken issueType = "account"
 )
 
+// OpenTok stores the API key and secret for use in making API call
 type OpenTok struct {
 	apiKey    string
 	apiSecret string
+	apiHost   string
 }
 
+// New returns an initialized OpenTok instance with the API key and API secret.
 func New(apiKey, apiSecret string) *OpenTok {
-	return &OpenTok{apiKey, apiSecret}
+	return &OpenTok{apiKey, apiSecret, defaultAPIHost}
 }
 
+// SetAPIHost is used to set OpenTok API Host to specific URL
+func (ot *OpenTok) SetAPIHost(url string) error {
+	if url == "" {
+		return fmt.Errorf("OpenTok API Host cannot be empty")
+	}
+
+	ot.apiHost = url
+
+	return nil
+}
+
+// Generate JWT token for API calls
 func (ot *OpenTok) jwtToken(ist issueType) (string, error) {
 	type OpenTokClaims struct {
 		Ist issueType `json:"ist,omitempty"`

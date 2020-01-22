@@ -5,15 +5,13 @@ import (
 	"net/http"
 )
 
-/**
- * Disconnect a client from an OpenTok session via server-side
- */
-func (ot *OpenTok) ForceDisconnect(sessionId, connectionId string) error {
-	if sessionId == "" {
+// ForceDisconnect disconnects a client from an OpenTok session via server-side
+func (ot *OpenTok) ForceDisconnect(sessionID, connectionID string) error {
+	if sessionID == "" {
 		return fmt.Errorf("Connection cannot be disconnected without a session ID")
 	}
 
-	if connectionId == "" {
+	if connectionID == "" {
 		return fmt.Errorf("Connection cannot be disconnected without a connection ID")
 	}
 
@@ -23,13 +21,14 @@ func (ot *OpenTok) ForceDisconnect(sessionId, connectionId string) error {
 		return err
 	}
 
-	endpoint := apiHost + projectURL + "/" + ot.apiKey + "/session/" + sessionId + "/connection/" + connectionId
+	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/session/" + sessionID + "/connection/" + connectionID
 	req, err := http.NewRequest("DELETE", endpoint, nil)
 	if err != nil {
 		return err
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
+	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
