@@ -1,6 +1,6 @@
 # OpenTok Go SDK
 
-[![API Reference](https://godoc.org/github.com/calvertyang/opentok-go-sdk?status.svg)](https://godoc.org/github.com/calvertyang/opentok-go-sdk)
+[![API Reference](https://godoc.org/github.com/calvertyang/opentok-go-sdk?status.svg)](https://pkg.go.dev/github.com/calvertyang/opentok-go-sdk/v2@v2.0.0/opentok)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/calvertyang/opentok-go-sdk)](https://github.com/calvertyang/opentok-go-sdk/releases/latest)
 [![Build Status](https://travis-ci.org/calvertyang/opentok-go-sdk.svg?branch=master)](https://travis-ci.org/calvertyang/opentok-go-sdk)
 [![Go Report Card](https://goreportcard.com/badge/github.com/calvertyang/opentok-go-sdk)](https://goreportcard.com/report/github.com/calvertyang/opentok-go-sdk)
@@ -16,7 +16,7 @@ broadcasts](https://tokbox.com/developer/guides/broadcast/live-streaming/),
 working with OpenTok [SIP interconnect](https://tokbox.com/developer/guides/sip),
 and [disconnecting clients from sessions](https://tokbox.com/developer/guides/moderation/rest/).
 
-For usage and more information, please refer to [GoDoc](https://godoc.org/github.com/calvertyang/opentok-go-sdk).
+For usage and more information, please refer to [GoDoc](https://pkg.go.dev/github.com/calvertyang/opentok-go-sdk/v2@v2.0.0/opentok).
 
 ## Installing
 
