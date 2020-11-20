@@ -2,6 +2,7 @@ package opentok
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -47,8 +48,13 @@ type Project struct {
 	EnvironmentDescription string `json:"environmentDescription"`
 }
 
-// CreateProject creates an OpenTok API key and secret for a project.
+// CreateProject creates an OpenTok API key and secret for a project..
 func (ot *OpenTok) CreateProject(projectName string) (*Project, error) {
+	return ot.CreateProjectContext(context.Background(), projectName)
+}
+
+// CreateProjectContext uses ctx for HTTP requests.
+func (ot *OpenTok) CreateProjectContext(ctx context.Context, projectName string) (*Project, error) {
 	jsonStr := []byte{}
 	if projectName != "" {
 		jsonStr = []byte(`{ "name": "` + projectName + `" }`)
@@ -72,8 +78,7 @@ func (ot *OpenTok) CreateProject(projectName string) (*Project, error) {
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -91,8 +96,13 @@ func (ot *OpenTok) CreateProject(projectName string) (*Project, error) {
 	return project, nil
 }
 
-// ListProjects returns the records for all projects.
+// ListProjectsContext uses ctx for HTTP requests.
 func (ot *OpenTok) ListProjects() ([]*Project, error) {
+	return ot.ListProjectsContext(context.Background())
+}
+
+// ListProjectsContext uses ctx for HTTP requests..
+func (ot *OpenTok) ListProjectsContext(ctx context.Context) ([]*Project, error) {
 	//Create jwt token
 	jwt, err := ot.jwtToken(accountToken)
 	if err != nil {
@@ -108,8 +118,7 @@ func (ot *OpenTok) ListProjects() ([]*Project, error) {
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -129,6 +138,11 @@ func (ot *OpenTok) ListProjects() ([]*Project, error) {
 
 // GetProject returns a project details record describing the project.
 func (ot *OpenTok) GetProject(projectAPIKey string) (*Project, error) {
+	return ot.GetProjectContext(context.Background(), projectAPIKey)
+}
+
+// GetProjectContext uses ctx for HTTP requests.
+func (ot *OpenTok) GetProjectContext(ctx context.Context, projectAPIKey string) (*Project, error) {
 	if projectAPIKey == "" {
 		return nil, fmt.Errorf("Cannot get project information without a project API key")
 	}
@@ -148,8 +162,7 @@ func (ot *OpenTok) GetProject(projectAPIKey string) (*Project, error) {
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -167,9 +180,14 @@ func (ot *OpenTok) GetProject(projectAPIKey string) (*Project, error) {
 	return project, nil
 }
 
-// ChangeProjectStatus changes the status of  project. The status is either
-// active or suspended.
+// ChangeProjectStatus changes the status of project. The status is
+// either active or suspended.
 func (ot *OpenTok) ChangeProjectStatus(projectAPIKey string, projectStatus ProjectStatus) (*Project, error) {
+	return ot.ChangeProjectStatusContext(context.Background(), projectAPIKey, projectStatus)
+}
+
+// ChangeProjectStatusContext uses ctx for HTTP requests.
+func (ot *OpenTok) ChangeProjectStatusContext(ctx context.Context, projectAPIKey string, projectStatus ProjectStatus) (*Project, error) {
 	if projectAPIKey == "" {
 		return nil, fmt.Errorf("Project status cannot be changed without a project API key")
 	}
@@ -196,8 +214,7 @@ func (ot *OpenTok) ChangeProjectStatus(projectAPIKey string, projectStatus Proje
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -217,6 +234,11 @@ func (ot *OpenTok) ChangeProjectStatus(projectAPIKey string, projectStatus Proje
 
 // RefreshProjectSecret generates a new API secret for a project.
 func (ot *OpenTok) RefreshProjectSecret(projectAPIKey string) (*Project, error) {
+	return ot.RefreshProjectSecretContext(context.Background(), projectAPIKey)
+}
+
+// RefreshProjectSecretContext uses ctx for HTTP requests.
+func (ot *OpenTok) RefreshProjectSecretContext(ctx context.Context, projectAPIKey string) (*Project, error) {
 	if projectAPIKey == "" {
 		return nil, fmt.Errorf("Project secret cannot be refreshed without a project API key")
 	}
@@ -236,8 +258,7 @@ func (ot *OpenTok) RefreshProjectSecret(projectAPIKey string) (*Project, error) 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -255,9 +276,14 @@ func (ot *OpenTok) RefreshProjectSecret(projectAPIKey string) (*Project, error) 
 	return project, nil
 }
 
-// DeleteProject prevents the use of the project API key (and any OpenTok
-// sessions created with it).
+// DeleteProjectContext prevents the use of the project API key (and
+// any OpenTok sessions created with it).
 func (ot *OpenTok) DeleteProject(projectAPIKey string) error {
+	return ot.DeleteProjectContext(context.Background(), projectAPIKey)
+}
+
+// DeleteProjectContext uses ctx for HTTP requests.
+func (ot *OpenTok) DeleteProjectContext(ctx context.Context, projectAPIKey string) error {
 	if projectAPIKey == "" {
 		return fmt.Errorf("Project cannot be deleted without a project API key")
 	}
@@ -277,8 +303,7 @@ func (ot *OpenTok) DeleteProject(projectAPIKey string) error {
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return err
 	}

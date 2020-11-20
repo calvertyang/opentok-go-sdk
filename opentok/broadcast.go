@@ -2,6 +2,7 @@ package opentok
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -65,7 +66,7 @@ type BroadcastURLs struct {
 	HLS string `json:"hls"`
 
 	// The configuration of RTMP.
-	RTMP []*RTMPConfig `json:rtmp`
+	RTMP []*RTMPConfig `json:"rtmp"`
 }
 
 // Broadcast defines the response returned from API.
@@ -123,10 +124,15 @@ type BroadcastList struct {
 	Items []*Broadcast `json:"items"`
 }
 
-// StartBroadcast starts a live streaming for an OpenTok session.
-// This broadcasts the session to an HLS (HTTP live streaming) or to RTMP
+// StartBroadcast starts a live streaming for an OpenTok session. This
+// broadcasts the session to an HLS (HTTP live streaming) or to RTMP
 // streams.
 func (ot *OpenTok) StartBroadcast(sessionID string, opts *BroadcastOptions) (*Broadcast, error) {
+	return ot.StartBroadcastContext(context.Background(), sessionID, opts)
+}
+
+// StartBroadcastContext uses ctx for HTTP requests.
+func (ot *OpenTok) StartBroadcastContext(ctx context.Context, sessionID string, opts *BroadcastOptions) (*Broadcast, error) {
 	opts.SessionID = sessionID
 
 	if opts.Layout != nil {
@@ -151,7 +157,7 @@ func (ot *OpenTok) StartBroadcast(sessionID string, opts *BroadcastOptions) (*Br
 
 	jsonStr, _ := json.Marshal(opts)
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return nil, err
@@ -167,8 +173,7 @@ func (ot *OpenTok) StartBroadcast(sessionID string, opts *BroadcastOptions) (*Br
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -191,6 +196,11 @@ func (ot *OpenTok) StartBroadcast(sessionID string, opts *BroadcastOptions) (*Br
 // StopBroadcast stops a live broadcast of an OpenTok session.
 // Note that broadcasts automatically stop 120 minutes after they are started.
 func (ot *OpenTok) StopBroadcast(broadcastID string) (*Broadcast, error) {
+	return ot.StopBroadcastContext(context.Background(), broadcastID)
+}
+
+// StopBroadcastContext uses ctx for HTTP requests.
+func (ot *OpenTok) StopBroadcastContext(ctx context.Context, broadcastID string) (*Broadcast, error) {
 	if broadcastID == "" {
 		return nil, fmt.Errorf("Live stremaing broadcast cannot be stopped without an broadcast ID")
 	}
@@ -210,8 +220,7 @@ func (ot *OpenTok) StopBroadcast(broadcastID string) (*Broadcast, error) {
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -231,10 +240,15 @@ func (ot *OpenTok) StopBroadcast(broadcastID string) (*Broadcast, error) {
 	return broadcast, nil
 }
 
-// ListBroadcasts returns the records of all broadcasts for your project that
-// are in progress and started. Completed broadcasts are not included in the
-// listing.
+// ListBroadcasts returns the records of all broadcasts for your
+// project that are in progress and started. Completed broadcasts are
+// not included in the listing.
 func (ot *OpenTok) ListBroadcasts(opts *BroadcastListOptions) (*BroadcastList, error) {
+	return ot.ListBroadcastsContext(context.Background(), opts)
+}
+
+// ListBroadcastsContext uses ctx for HTTP requests.
+func (ot *OpenTok) ListBroadcastsContext(ctx context.Context, opts *BroadcastListOptions) (*BroadcastList, error) {
 	params := []string{"?"}
 
 	if opts.Offset != 0 {
@@ -264,8 +278,7 @@ func (ot *OpenTok) ListBroadcasts(opts *BroadcastListOptions) (*BroadcastList, e
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -289,6 +302,11 @@ func (ot *OpenTok) ListBroadcasts(opts *BroadcastListOptions) (*BroadcastList, e
 
 // GetBroadcast returns a broadcast that is in-progress.
 func (ot *OpenTok) GetBroadcast(broadcastID string) (*Broadcast, error) {
+	return ot.GetBroadcastContext(context.Background(), broadcastID)
+}
+
+// GetBroadcastContext uses ctx for HTTP requests.
+func (ot *OpenTok) GetBroadcastContext(ctx context.Context, broadcastID string) (*Broadcast, error) {
 	if broadcastID == "" {
 		return nil, fmt.Errorf("Cannot get broadcast information without an broadcast ID")
 	}
@@ -308,8 +326,7 @@ func (ot *OpenTok) GetBroadcast(broadcastID string) (*Broadcast, error) {
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -332,6 +349,11 @@ func (ot *OpenTok) GetBroadcast(broadcastID string) (*Broadcast, error) {
 // SetBroadcastLayout dynamically changes the layout type of a live streaming
 // broadcast.
 func (ot *OpenTok) SetBroadcastLayout(broadcastID string, layout *Layout) (*Broadcast, error) {
+	return ot.SetBroadcastLayoutContext(context.Background(), broadcastID, layout)
+}
+
+// SetBroadcastLayoutContext uses ctx for HTTP requests.
+func (ot *OpenTok) SetBroadcastLayoutContext(ctx context.Context, broadcastID string, layout *Layout) (*Broadcast, error) {
 	if broadcastID == "" {
 		return nil, fmt.Errorf("Cannot change the layout type of a live streaming broadcast without an broadcast ID")
 	}
@@ -368,8 +390,7 @@ func (ot *OpenTok) SetBroadcastLayout(broadcastID string, layout *Layout) (*Broa
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@ package opentok
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -216,6 +217,11 @@ type StorageOptions struct {
 // You can only record one archive at a time for a given session.
 // You can only record archives of sessions that use the OpenTok Media Router.
 func (ot *OpenTok) StartArchive(sessionID string, opts *ArchiveOptions) (*Archive, error) {
+	return ot.StartArchiveContext(context.Background(), sessionID, opts)
+}
+
+// StartArchiveContext uses ctx for HTTP requests.
+func (ot *OpenTok) StartArchiveContext(ctx context.Context, sessionID string, opts *ArchiveOptions) (*Archive, error) {
 	opts.SessionID = sessionID
 
 	if opts.Layout != nil {
@@ -260,8 +266,7 @@ func (ot *OpenTok) StartArchive(sessionID string, opts *ArchiveOptions) (*Archiv
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -287,6 +292,11 @@ func (ot *OpenTok) StartArchive(sessionID string, opts *ArchiveOptions) (*Archiv
 // last client disconnects from the session, or 60 minutes after the last
 // client stops publishing.
 func (ot *OpenTok) StopArchive(archiveID string) (*Archive, error) {
+	return ot.StopArchiveContext(context.Background(), archiveID)
+}
+
+// StopArchiveContext uses ctx for HTTP requests.
+func (ot *OpenTok) StopArchiveContext(ctx context.Context, archiveID string) (*Archive, error) {
 	if archiveID == "" {
 		return nil, fmt.Errorf("Archive recording cannot be stopped without an archive ID")
 	}
@@ -306,8 +316,7 @@ func (ot *OpenTok) StopArchive(archiveID string) (*Archive, error) {
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -330,6 +339,11 @@ func (ot *OpenTok) StopArchive(archiveID string) (*Archive, error) {
 // ListArchives returns the records of all archives for your project that are
 // in progress.
 func (ot *OpenTok) ListArchives(opts *ArchiveListOptions) (*ArchiveList, error) {
+	return ot.ListArchivesContext(context.Background(), opts)
+}
+
+// ListArchivesContext uses ctx for HTTP requests.
+func (ot *OpenTok) ListArchivesContext(ctx context.Context, opts *ArchiveListOptions) (*ArchiveList, error) {
 	params := []string{"?"}
 
 	if opts.Offset != 0 {
@@ -359,8 +373,7 @@ func (ot *OpenTok) ListArchives(opts *ArchiveListOptions) (*ArchiveList, error) 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -384,6 +397,11 @@ func (ot *OpenTok) ListArchives(opts *ArchiveListOptions) (*ArchiveList, error) 
 
 // GetArchive returns a archive details record describing the archive.
 func (ot *OpenTok) GetArchive(archiveID string) (*Archive, error) {
+	return ot.GetArchiveContext(context.Background(), archiveID)
+}
+
+// GetArchiveContext uses ctx for HTTP requests.
+func (ot *OpenTok) GetArchiveContext(ctx context.Context, archiveID string) (*Archive, error) {
 	if archiveID == "" {
 		return nil, fmt.Errorf("Cannot get archive information without an archive ID")
 	}
@@ -403,8 +421,7 @@ func (ot *OpenTok) GetArchive(archiveID string) (*Archive, error) {
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -426,6 +443,11 @@ func (ot *OpenTok) GetArchive(archiveID string) (*Archive, error) {
 
 // DeleteArchive deletes a specific archive.
 func (ot *OpenTok) DeleteArchive(archiveID string) error {
+	return ot.DeleteArchiveContext(context.Background(), archiveID)
+}
+
+// DeleteArchiveContext uses ctx for HTTP requests.
+func (ot *OpenTok) DeleteArchiveContext(ctx context.Context, archiveID string) error {
 	if archiveID == "" {
 		return fmt.Errorf("Archive cannot be deleted without an archive ID")
 	}
@@ -445,8 +467,7 @@ func (ot *OpenTok) DeleteArchive(archiveID string) error {
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return err
 	}
@@ -462,6 +483,11 @@ func (ot *OpenTok) DeleteArchive(archiveID string) error {
 // SetArchiveStorage let you can have OpenTok upload completed archives to an
 // Amazon S3 bucket (or an S3-compliant storage provider) or Microsoft Azure container.
 func (ot *OpenTok) SetArchiveStorage(opts *StorageOptions) (*StorageOptions, error) {
+	return ot.SetArchiveStorageContext(context.Background(), opts)
+}
+
+// SetArchiveStorageContext uses ctx for HTTP requests.
+func (ot *OpenTok) SetArchiveStorageContext(ctx context.Context, opts *StorageOptions) (*StorageOptions, error) {
 	if opts.Type != "s3" && opts.Type != "azure" {
 		return nil, fmt.Errorf("Only support Amazon S3 or Microsoft Azure for upload completed archives")
 	}
@@ -513,8 +539,7 @@ func (ot *OpenTok) SetArchiveStorage(opts *StorageOptions) (*StorageOptions, err
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -534,6 +559,11 @@ func (ot *OpenTok) SetArchiveStorage(opts *StorageOptions) (*StorageOptions, err
 
 // DeleteArchiveStorage deletes the configuration of archive storage.
 func (ot *OpenTok) DeleteArchiveStorage() error {
+	return ot.DeleteArchiveStorageContext(context.Background())
+}
+
+// DeleteArchiveStorageContext uses ctx for HTTP requests.
+func (ot *OpenTok) DeleteArchiveStorageContext(ctx context.Context) error {
 	//Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
@@ -549,8 +579,7 @@ func (ot *OpenTok) DeleteArchiveStorage() error {
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return err
 	}
@@ -565,6 +594,11 @@ func (ot *OpenTok) DeleteArchiveStorage() error {
 
 // SetArchiveLayout dynamically change the layout type of a composed archive.
 func (ot *OpenTok) SetArchiveLayout(archiveID string, layout *Layout) (*Archive, error) {
+	return ot.SetArchiveLayoutContext(context.Background(), archiveID, layout)
+}
+
+// SetArchiveLayoutContext uses ctx for HTTP requests.
+func (ot *OpenTok) SetArchiveLayoutContext(ctx context.Context, archiveID string, layout *Layout) (*Archive, error) {
 	if archiveID == "" {
 		return nil, fmt.Errorf("Cannot change the layout type of a composed archive without an archive ID")
 	}
@@ -601,8 +635,7 @@ func (ot *OpenTok) SetArchiveLayout(archiveID string, layout *Layout) (*Archive,
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}

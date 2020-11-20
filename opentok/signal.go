@@ -2,6 +2,7 @@ package opentok
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -19,6 +20,11 @@ type SignalData struct {
 
 // SendSessionSignal send signals to all participants in an active OpenTok session.
 func (ot *OpenTok) SendSessionSignal(sessionID string, data *SignalData) error {
+	return ot.SendSessionSignalContext(context.Background(), sessionID, data)
+}
+
+// SendSessionSignalContext uses ctx for HTTP requests.
+func (ot *OpenTok) SendSessionSignalContext(ctx context.Context, sessionID string, data *SignalData) error {
 	if sessionID == "" {
 		return fmt.Errorf("Signal cannot be sent without a session ID")
 	}
@@ -41,8 +47,7 @@ func (ot *OpenTok) SendSessionSignal(sessionID string, data *SignalData) error {
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return err
 	}
@@ -55,8 +60,13 @@ func (ot *OpenTok) SendSessionSignal(sessionID string, data *SignalData) error {
 	return nil
 }
 
-// SendConnectionSignal send signals to a specific client in an active OpenTok session
+// SendConnectionSignal send signals to a specific client in an active OpenTok session.
 func (ot *OpenTok) SendConnectionSignal(sessionID, connectionID string, data *SignalData) error {
+	return ot.SendConnectionSignalContext(context.Background(), sessionID, connectionID, data)
+}
+
+// SendConnectionSignalContext uses ctx for HTTP requests.
+func (ot *OpenTok) SendConnectionSignalContext(ctx context.Context, sessionID, connectionID string, data *SignalData) error {
 	if sessionID == "" {
 		return fmt.Errorf("Signal cannot be sent without a session ID")
 	}
@@ -83,8 +93,7 @@ func (ot *OpenTok) SendConnectionSignal(sessionID, connectionID string, data *Si
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return err
 	}

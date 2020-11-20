@@ -2,6 +2,7 @@ package opentok
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -50,6 +51,11 @@ type StreamClassOptions struct {
 
 // ListStreams returns the stream records in a session.
 func (ot *OpenTok) ListStreams(sessionID string) (*StreamList, error) {
+	return ot.ListStreamsContext(context.Background(), sessionID)
+}
+
+// ListStreamsContext uses ctx for HTTP requests.
+func (ot *OpenTok) ListStreamsContext(ctx context.Context, sessionID string) (*StreamList, error) {
 	if sessionID == "" {
 		return nil, fmt.Errorf("Cannot get all streams information without a session ID")
 	}
@@ -69,8 +75,7 @@ func (ot *OpenTok) ListStreams(sessionID string) (*StreamList, error) {
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -90,6 +95,11 @@ func (ot *OpenTok) ListStreams(sessionID string) (*StreamList, error) {
 
 // GetStream returns a stream details record describing the stream.
 func (ot *OpenTok) GetStream(sessionID, streamID string) (*Stream, error) {
+	return ot.GetStreamContext(context.Background(), sessionID, streamID)
+}
+
+// GetStreamContext uses ctx for HTTP requests.
+func (ot *OpenTok) GetStreamContext(ctx context.Context, sessionID, streamID string) (*Stream, error) {
 	if sessionID == "" {
 		return nil, fmt.Errorf("Cannot get stream information without a session ID")
 	}
@@ -113,8 +123,7 @@ func (ot *OpenTok) GetStream(sessionID, streamID string) (*Stream, error) {
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -132,9 +141,13 @@ func (ot *OpenTok) GetStream(sessionID, streamID string) (*Stream, error) {
 	return stream, nil
 }
 
-// SetStreamClassLists changes the composed archive layout classes for an
-// OpenTok stream
+// SetStreamClassLists changes the composed archive layout classes for an OpenTok stream
 func (ot *OpenTok) SetStreamClassLists(sessionID string, opts *StreamClassOptions) (*StreamList, error) {
+	return ot.SetStreamClassListsContext(context.Background(), sessionID, opts)
+}
+
+// SetStreamClassListsContext uses ctx for HTTP requests.
+func (ot *OpenTok) SetStreamClassListsContext(ctx context.Context, sessionID string, opts *StreamClassOptions) (*StreamList, error) {
 	if sessionID == "" {
 		return nil, fmt.Errorf("Cannot change the live streaming layout classes for an OpenTok stream without an session ID")
 	}
@@ -157,8 +170,7 @@ func (ot *OpenTok) SetStreamClassLists(sessionID string, opts *StreamClassOption
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}

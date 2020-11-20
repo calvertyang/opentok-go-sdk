@@ -2,6 +2,7 @@ package opentok
 
 import (
 	"log"
+	"net/http"
 	"testing"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -13,12 +14,12 @@ const (
 	apiSecret = "<your api secret here>"
 )
 
-var ot = New(apiKey, apiSecret)
+var ot = New(apiKey, apiSecret, http.DefaultClient)
 
 func TestNew(t *testing.T) {
-	expect := &OpenTok{apiKey, apiSecret, defaultAPIHost}
+	expect := &OpenTok{apiKey, apiSecret, defaultAPIHost, nil}
 
-	actual := New(apiKey, apiSecret)
+	actual := New(apiKey, apiSecret, nil)
 
 	assert.Equal(t, expect, actual)
 }
@@ -33,7 +34,7 @@ func TestOpenTok_SetAPIHost(t *testing.T) {
 }
 
 func TestOpenTok_JwtToken(t *testing.T) {
-	ot := New(apiKey, apiSecret)
+	ot := New(apiKey, apiSecret, nil)
 
 	// Validate  project token
 	tokenString, err := ot.jwtToken(projectToken)

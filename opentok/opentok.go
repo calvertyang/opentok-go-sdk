@@ -2,11 +2,17 @@ package opentok
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 )
+
+// HTTPClient is an interface to allow custom clients and timeouts.
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
 
 // OpenTok API host URL
 const defaultAPIHost = "https://api.opentok.com"
@@ -28,11 +34,18 @@ type OpenTok struct {
 	apiKey    string
 	apiSecret string
 	apiHost   string
+
+	httpClient HTTPClient
 }
 
 // New returns an initialized OpenTok instance with the API key and API secret.
-func New(apiKey, apiSecret string) *OpenTok {
-	return &OpenTok{apiKey, apiSecret, defaultAPIHost}
+func New(apiKey, apiSecret string, client HTTPClient) *OpenTok {
+	return &OpenTok{
+		apiKey:     apiKey,
+		apiSecret:  apiSecret,
+		apiHost:    defaultAPIHost,
+		httpClient: client,
+	}
 }
 
 // SetAPIHost is used to set OpenTok API Host to specific URL
