@@ -2,6 +2,7 @@ package opentok
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -75,6 +76,11 @@ type SIPCall struct {
 // an audio-only stream. The OpenTok Media Router mixes audio from other streams
 // in the session and sends the mixed audio to your SIP endpoint.
 func (ot *OpenTok) Dial(sessionID string, opts *DialOptions) (*SIPCall, error) {
+	return ot.DialContext(context.Background(), sessionID, opts)
+}
+
+// DialContext uses ctx for HTTP requests.
+func (ot *OpenTok) DialContext(ctx context.Context, sessionID string, opts *DialOptions) (*SIPCall, error) {
 	if sessionID == "" {
 		return nil, fmt.Errorf("SIP call cannot be initiated without an session ID")
 	}
@@ -111,8 +117,7 @@ func (ot *OpenTok) Dial(sessionID string, opts *DialOptions) (*SIPCall, error) {
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}

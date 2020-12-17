@@ -1,12 +1,18 @@
 package opentok
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 )
 
 // ForceDisconnect disconnects a client from an OpenTok session via server-side
 func (ot *OpenTok) ForceDisconnect(sessionID, connectionID string) error {
+	return ot.ForceDisconnectContext(context.Background(), sessionID, connectionID)
+}
+
+// ForceDisconnectContext uses ctx for HTTP requests.
+func (ot *OpenTok) ForceDisconnectContext(ctx context.Context, sessionID, connectionID string) error {
 	if sessionID == "" {
 		return fmt.Errorf("Connection cannot be disconnected without a session ID")
 	}
@@ -30,8 +36,7 @@ func (ot *OpenTok) ForceDisconnect(sessionID, connectionID string) error {
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package opentok
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
@@ -122,6 +123,11 @@ type SessionIDInfo struct {
 
 // CreateSession generates a new session.
 func (ot *OpenTok) CreateSession(opts *SessionOptions) (*Session, error) {
+	return ot.CreateSessionContext(context.Background(), opts)
+}
+
+// CreateSessionContext uses ctx for HTTP requests.
+func (ot *OpenTok) CreateSessionContext(ctx context.Context, opts *SessionOptions) (*Session, error) {
 	params := url.Values{}
 
 	if opts.ArchiveMode != "" {
@@ -151,8 +157,7 @@ func (ot *OpenTok) CreateSession(opts *SessionOptions) (*Session, error) {
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
 
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
