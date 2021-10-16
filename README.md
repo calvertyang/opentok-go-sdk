@@ -1,6 +1,6 @@
 # OpenTok Go SDK
 
-[![API Reference](https://godoc.org/github.com/calvertyang/opentok-go-sdk?status.svg)](https://pkg.go.dev/github.com/calvertyang/opentok-go-sdk/v2@v2.0.0/opentok)
+[![API Reference](https://godoc.org/github.com/calvertyang/opentok-go-sdk?status.svg)](https://pkg.go.dev/github.com/calvertyang/opentok-go-sdk/v2@v2.1.1/opentok)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/calvertyang/opentok-go-sdk)](https://github.com/calvertyang/opentok-go-sdk/releases/latest)
 [![Build Status](https://travis-ci.org/calvertyang/opentok-go-sdk.svg?branch=master)](https://travis-ci.org/calvertyang/opentok-go-sdk)
 [![Go Report Card](https://goreportcard.com/badge/github.com/calvertyang/opentok-go-sdk)](https://goreportcard.com/report/github.com/calvertyang/opentok-go-sdk)
