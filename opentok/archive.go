@@ -250,7 +250,7 @@ func (ot *OpenTok) StartArchiveContext(ctx context.Context, sessionID string, op
 
 	jsonStr, _ := json.Marshal(opts)
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return nil, err
@@ -301,7 +301,7 @@ func (ot *OpenTok) StopArchiveContext(ctx context.Context, archiveID string) (*A
 		return nil, fmt.Errorf("Archive recording cannot be stopped without an archive ID")
 	}
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return nil, err
@@ -358,7 +358,7 @@ func (ot *OpenTok) ListArchivesContext(ctx context.Context, opts *ArchiveListOpt
 		params = append(params, "sessionId="+opts.SessionID)
 	}
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return nil, err
@@ -406,7 +406,7 @@ func (ot *OpenTok) GetArchiveContext(ctx context.Context, archiveID string) (*Ar
 		return nil, fmt.Errorf("Cannot get archive information without an archive ID")
 	}
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return nil, err
@@ -452,7 +452,7 @@ func (ot *OpenTok) DeleteArchiveContext(ctx context.Context, archiveID string) e
 		return fmt.Errorf("Archive cannot be deleted without an archive ID")
 	}
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return err
@@ -523,7 +523,7 @@ func (ot *OpenTok) SetArchiveStorageContext(ctx context.Context, opts *StorageOp
 
 	jsonStr, _ := json.Marshal(opts)
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return nil, err
@@ -564,7 +564,7 @@ func (ot *OpenTok) DeleteArchiveStorage() error {
 
 // DeleteArchiveStorageContext uses ctx for HTTP requests.
 func (ot *OpenTok) DeleteArchiveStorageContext(ctx context.Context) error {
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return err
@@ -619,7 +619,7 @@ func (ot *OpenTok) SetArchiveLayoutContext(ctx context.Context, archiveID string
 
 	jsonStr, _ := json.Marshal(layout)
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return nil, err

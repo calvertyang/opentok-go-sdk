@@ -60,7 +60,7 @@ func (ot *OpenTok) ListStreamsContext(ctx context.Context, sessionID string) (*S
 		return nil, fmt.Errorf("Cannot get all streams information without a session ID")
 	}
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return nil, err
@@ -108,7 +108,7 @@ func (ot *OpenTok) GetStreamContext(ctx context.Context, sessionID, streamID str
 		return nil, fmt.Errorf("Cannot get stream information without a stream ID")
 	}
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return nil, err
@@ -154,7 +154,7 @@ func (ot *OpenTok) SetStreamClassListsContext(ctx context.Context, sessionID str
 
 	jsonStr, _ := json.Marshal(opts)
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return nil, err

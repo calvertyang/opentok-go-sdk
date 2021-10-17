@@ -21,7 +21,7 @@ func (ot *OpenTok) ForceDisconnectContext(ctx context.Context, sessionID, connec
 		return fmt.Errorf("Connection cannot be disconnected without a connection ID")
 	}
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return err

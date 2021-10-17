@@ -101,7 +101,7 @@ func (ot *OpenTok) DialContext(ctx context.Context, sessionID string, opts *Dial
 
 	jsonStr, _ := json.Marshal(opts)
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return nil, err

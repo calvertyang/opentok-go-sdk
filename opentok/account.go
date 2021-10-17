@@ -60,7 +60,7 @@ func (ot *OpenTok) CreateProjectContext(ctx context.Context, projectName string)
 		jsonStr = []byte(`{ "name": "` + projectName + `" }`)
 	}
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(accountToken)
 	if err != nil {
 		return nil, err
@@ -103,7 +103,7 @@ func (ot *OpenTok) ListProjects() ([]*Project, error) {
 
 // ListProjectsContext uses ctx for HTTP requests..
 func (ot *OpenTok) ListProjectsContext(ctx context.Context) ([]*Project, error) {
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(accountToken)
 	if err != nil {
 		return nil, err
@@ -147,7 +147,7 @@ func (ot *OpenTok) GetProjectContext(ctx context.Context, projectAPIKey string) 
 		return nil, fmt.Errorf("Cannot get project information without a project API key")
 	}
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(accountToken)
 	if err != nil {
 		return nil, err
@@ -198,7 +198,7 @@ func (ot *OpenTok) ChangeProjectStatusContext(ctx context.Context, projectAPIKey
 
 	jsonStr := []byte(`{ "status": "` + projectStatus + `" }`)
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(accountToken)
 	if err != nil {
 		return nil, err
@@ -243,7 +243,7 @@ func (ot *OpenTok) RefreshProjectSecretContext(ctx context.Context, projectAPIKe
 		return nil, fmt.Errorf("Project secret cannot be refreshed without a project API key")
 	}
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(accountToken)
 	if err != nil {
 		return nil, err
@@ -288,7 +288,7 @@ func (ot *OpenTok) DeleteProjectContext(ctx context.Context, projectAPIKey strin
 		return fmt.Errorf("Project cannot be deleted without a project API key")
 	}
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(accountToken)
 	if err != nil {
 		return err

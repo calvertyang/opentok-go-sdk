@@ -205,7 +205,7 @@ func (ot *OpenTok) StopBroadcastContext(ctx context.Context, broadcastID string)
 		return nil, fmt.Errorf("Live stremaing broadcast cannot be stopped without an broadcast ID")
 	}
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return nil, err
@@ -263,7 +263,7 @@ func (ot *OpenTok) ListBroadcastsContext(ctx context.Context, opts *BroadcastLis
 		params = append(params, "sessionId="+opts.SessionID)
 	}
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return nil, err
@@ -311,7 +311,7 @@ func (ot *OpenTok) GetBroadcastContext(ctx context.Context, broadcastID string) 
 		return nil, fmt.Errorf("Cannot get broadcast information without an broadcast ID")
 	}
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return nil, err
@@ -374,7 +374,7 @@ func (ot *OpenTok) SetBroadcastLayoutContext(ctx context.Context, broadcastID st
 
 	jsonStr, _ := json.Marshal(layout)
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return nil, err

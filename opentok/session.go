@@ -142,7 +142,7 @@ func (ot *OpenTok) CreateSessionContext(ctx context.Context, opts *SessionOption
 		params.Add("p2p.preference", string(opts.MediaMode))
 	}
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return nil, err

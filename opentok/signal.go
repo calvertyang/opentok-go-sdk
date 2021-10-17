@@ -31,7 +31,7 @@ func (ot *OpenTok) SendSessionSignalContext(ctx context.Context, sessionID strin
 
 	jsonStr, _ := json.Marshal(data)
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return err
@@ -77,7 +77,7 @@ func (ot *OpenTok) SendConnectionSignalContext(ctx context.Context, sessionID, c
 
 	jsonStr, _ := json.Marshal(data)
 
-	//Create jwt token
+	// Create jwt token
 	jwt, err := ot.jwtToken(projectToken)
 	if err != nil {
 		return err
