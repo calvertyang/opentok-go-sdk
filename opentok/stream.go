@@ -67,7 +67,7 @@ func (ot *OpenTok) ListStreamsContext(ctx context.Context, sessionID string) (*S
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/session/" + sessionID + "/stream"
-	req, err := http.NewRequest("GET", endpoint, nil)
+	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (ot *OpenTok) GetStreamContext(ctx context.Context, sessionID, streamID str
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/session/" + sessionID + "/stream/" + streamID
-	req, err := http.NewRequest("GET", endpoint, nil)
+	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}

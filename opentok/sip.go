@@ -108,7 +108,7 @@ func (ot *OpenTok) DialContext(ctx context.Context, sessionID string, opts *Dial
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/dial"
-	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return nil, err
 	}

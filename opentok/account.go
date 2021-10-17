@@ -67,7 +67,7 @@ func (ot *OpenTok) CreateProjectContext(ctx context.Context, projectName string)
 	}
 
 	endpoint := ot.apiHost + projectURL
-	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (ot *OpenTok) ListProjectsContext(ctx context.Context) ([]*Project, error) 
 	}
 
 	endpoint := ot.apiHost + projectURL
-	req, err := http.NewRequest("GET", endpoint, nil)
+	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +154,7 @@ func (ot *OpenTok) GetProjectContext(ctx context.Context, projectAPIKey string) 
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + projectAPIKey
-	req, err := http.NewRequest("GET", endpoint, nil)
+	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -250,7 +250,7 @@ func (ot *OpenTok) RefreshProjectSecretContext(ctx context.Context, projectAPIKe
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + projectAPIKey + "/refreshSecret"
-	req, err := http.NewRequest("POST", endpoint, nil)
+	req, err := http.NewRequest(http.MethodPost, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}

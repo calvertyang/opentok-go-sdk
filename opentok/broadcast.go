@@ -164,7 +164,7 @@ func (ot *OpenTok) StartBroadcastContext(ctx context.Context, sessionID string, 
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/broadcast"
-	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return nil, err
 	}
@@ -212,7 +212,7 @@ func (ot *OpenTok) StopBroadcastContext(ctx context.Context, broadcastID string)
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/broadcast/" + broadcastID + "/stop"
-	req, err := http.NewRequest("POST", endpoint, nil)
+	req, err := http.NewRequest(http.MethodPost, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +270,7 @@ func (ot *OpenTok) ListBroadcastsContext(ctx context.Context, opts *BroadcastLis
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/broadcast" + strings.Join(params, "&")
-	req, err := http.NewRequest("GET", endpoint, nil)
+	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +318,7 @@ func (ot *OpenTok) GetBroadcastContext(ctx context.Context, broadcastID string) 
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/broadcast/" + broadcastID
-	req, err := http.NewRequest("GET", endpoint, nil)
+	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}

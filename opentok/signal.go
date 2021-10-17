@@ -38,7 +38,7 @@ func (ot *OpenTok) SendSessionSignalContext(ctx context.Context, sessionID strin
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/session/" + sessionID + "/signal"
-	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (ot *OpenTok) SendConnectionSignalContext(ctx context.Context, sessionID, c
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/session/" + sessionID + "/connection/" + connectionID + "/signal"
-	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return err
 	}

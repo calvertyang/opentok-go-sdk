@@ -148,7 +148,7 @@ func (ot *OpenTok) CreateSessionContext(ctx context.Context, opts *SessionOption
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", ot.apiHost+sessionCreateURL, strings.NewReader(params.Encode()))
+	req, err := http.NewRequest(http.MethodPost, ot.apiHost+sessionCreateURL, strings.NewReader(params.Encode()))
 	if err != nil {
 		return nil, err
 	}

@@ -257,7 +257,7 @@ func (ot *OpenTok) StartArchiveContext(ctx context.Context, sessionID string, op
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/archive"
-	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return nil, err
 	}
@@ -308,7 +308,7 @@ func (ot *OpenTok) StopArchiveContext(ctx context.Context, archiveID string) (*A
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/archive/" + archiveID + "/stop"
-	req, err := http.NewRequest("POST", endpoint, nil)
+	req, err := http.NewRequest(http.MethodPost, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -365,7 +365,7 @@ func (ot *OpenTok) ListArchivesContext(ctx context.Context, opts *ArchiveListOpt
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/archive" + strings.Join(params, "&")
-	req, err := http.NewRequest("GET", endpoint, nil)
+	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -413,7 +413,7 @@ func (ot *OpenTok) GetArchiveContext(ctx context.Context, archiveID string) (*Ar
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/archive/" + archiveID
-	req, err := http.NewRequest("GET", endpoint, nil)
+	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
