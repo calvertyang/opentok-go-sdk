@@ -76,7 +76,7 @@ func TestOpenTok_ListProjects(t *testing.T) {
 	ot.SetAPIHost(ts.URL)
 
 	expect := []*Project{
-		&Project{
+		{
 			ID:                     "40000001",
 			Secret:                 "ba7816bf8f01cfea414140de5dae2223b00361a3",
 			Status:                 "VALID",
@@ -85,7 +85,7 @@ func TestOpenTok_ListProjects(t *testing.T) {
 			EnvironmentName:        "default",
 			EnvironmentDescription: "Standard Environment",
 		},
-		&Project{
+		{
 			ID:                     "40000002",
 			Secret:                 "fcde2b2edba56bf408601fb721fe9b5c338d10ee",
 			Status:                 "VALID",

@@ -14,12 +14,12 @@ func ExampleOpenTok_StartBroadcast() {
 		MaxDuration: 60,
 		Outputs: &opentok.BroadcastOutputOptions{
 			RTMP: []*opentok.RTMPConfig{
-				&opentok.RTMPConfig{
+				{
 					ID:         "foo",
 					ServerURL:  "rtmps://myfooserver/myfooapp",
 					StreamName: "myfoostream",
 				},
-				&opentok.RTMPConfig{
+				{
 					ID:         "bar",
 					ServerURL:  "rtmp://mybarserver/mybarapp",
 					StreamName: "mybarstream",

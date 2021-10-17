@@ -53,13 +53,13 @@ func TestOpenTok_StartBroadcast(t *testing.T) {
 		BroadcastURLs: &BroadcastURLs{
 			HLS: "",
 			RTMP: []*RTMPConfig{
-				&RTMPConfig{
+				{
 					ID:         "foo",
 					Status:     "connecting",
 					ServerURL:  "rtmps://myfooserver/myfooapp",
 					StreamName: "myfoostream",
 				},
-				&RTMPConfig{
+				{
 					ID:         "bar",
 					Status:     "connecting",
 					ServerURL:  "rtmp://mybarserver/mybarapp",
@@ -77,12 +77,12 @@ func TestOpenTok_StartBroadcast(t *testing.T) {
 		MaxDuration: 60,
 		Outputs: &BroadcastOutputOptions{
 			RTMP: []*RTMPConfig{
-				&RTMPConfig{
+				{
 					ID:         "foo",
 					ServerURL:  "rtmps://myfooserver/myfooapp",
 					StreamName: "myfoostream",
 				},
-				&RTMPConfig{
+				{
 					ID:         "bar",
 					ServerURL:  "rtmp://mybarserver/mybarapp",
 					StreamName: "mybarstream",
@@ -181,7 +181,7 @@ func TestOpenTok_ListBroadcasts(t *testing.T) {
 	expect := &BroadcastList{
 		Count: 1,
 		Items: []*Broadcast{
-			&Broadcast{
+			{
 				ID:         "ce872e0d-4997-440a-a0a5-10ce715b54cf",
 				SessionID:  "1_QX90NjQ2MCY0Nm6-MTU4QTO4NzE5NTkyOX4yUy2OZndKQExJR0NyalcvNktmTzBpSnp-QX4",
 				ProjectID:  40000001,
@@ -192,13 +192,13 @@ func TestOpenTok_ListBroadcasts(t *testing.T) {
 				BroadcastURLs: &BroadcastURLs{
 					HLS: "",
 					RTMP: []*RTMPConfig{
-						&RTMPConfig{
+						{
 							ID:         "foo",
 							Status:     "connecting",
 							ServerURL:  "rtmps://myfooserver/myfooapp",
 							StreamName: "myfoostream",
 						},
-						&RTMPConfig{
+						{
 							ID:         "bar",
 							Status:     "connecting",
 							ServerURL:  "rtmp://mybarserver/mybarapp",
@@ -307,13 +307,13 @@ func TestOpenTok_SetBroadcastLayout(t *testing.T) {
 		BroadcastURLs: &BroadcastURLs{
 			HLS: "",
 			RTMP: []*RTMPConfig{
-				&RTMPConfig{
+				{
 					ID:         "foo",
 					Status:     "connecting",
 					ServerURL:  "rtmps://myfooserver/myfooapp",
 					StreamName: "myfoostream",
 				},
-				&RTMPConfig{
+				{
 					ID:         "bar",
 					Status:     "connecting",
 					ServerURL:  "rtmp://mybarserver/mybarapp",

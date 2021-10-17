@@ -48,7 +48,7 @@ func ExampleOpenTok_GetStream() {
 func ExampleOpenTok_SetStreamClassLists() {
 	streams, err := ot.SetStreamClassLists("1_QX90NjQ2MCY0Nm6-MTU4QTO4NzE5NTkyOX4yUy2OZndKQExJR0NyalcvNktmTzBpSnp-QX4", &opentok.StreamClassOptions{
 		Items: []*opentok.StreamClass{
-			&opentok.StreamClass{
+			{
 				ID:              "d962b966-964d-4f18-be3f-e0b181a43b0e",
 				LayoutClassList: []string{"full"},
 			},

@@ -155,7 +155,7 @@ func TestOpenTok_ListArchives(t *testing.T) {
 	expect := &ArchiveList{
 		Count: 1,
 		Items: []*Archive{
-			&Archive{
+			{
 				CreatedAt:  1579163008000,
 				Duration:   34,
 				HasAudio:   true,

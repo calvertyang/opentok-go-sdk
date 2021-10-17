@@ -31,7 +31,7 @@ func TestOpenTok_ListStreams(t *testing.T) {
 	expect := &StreamList{
 		Count: 1,
 		Items: []*Stream{
-			&Stream{
+			{
 				ID:              "d962b966-964d-4f18-be3f-e0b181a43b0e",
 				VideoType:       "camera",
 				Name:            "",
@@ -105,7 +105,7 @@ func TestOpenTok_SetStreamClassLists(t *testing.T) {
 	expect := &StreamList{
 		Count: 1,
 		Items: []*Stream{
-			&Stream{
+			{
 				ID:              "d962b966-964d-4f18-be3f-e0b181a43b0e",
 				VideoType:       "camera",
 				Name:            "",
@@ -116,7 +116,7 @@ func TestOpenTok_SetStreamClassLists(t *testing.T) {
 
 	actual, err := ot.SetStreamClassLists("1_QX90NjQ2MCY0Nm6-MTU4QTO4NzE5NTkyOX4yUy2OZndKQExJR0NyalcvNktmTzBpSnp-QX4", &StreamClassOptions{
 		Items: []*StreamClass{
-			&StreamClass{
+			{
 				ID:              "d962b966-964d-4f18-be3f-e0b181a43b0e",
 				LayoutClassList: []string{"full"},
 			},
