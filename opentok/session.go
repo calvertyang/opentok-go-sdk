@@ -155,7 +155,7 @@ func (ot *OpenTok) CreateSessionContext(ctx context.Context, opts *SessionOption
 
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
+	req.Header.Add("User-Agent", ot.userAgent)
 
 	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {

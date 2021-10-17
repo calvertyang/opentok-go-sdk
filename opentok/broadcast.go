@@ -171,7 +171,7 @@ func (ot *OpenTok) StartBroadcastContext(ctx context.Context, sessionID string, 
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
+	req.Header.Add("User-Agent", ot.userAgent)
 
 	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
@@ -218,7 +218,7 @@ func (ot *OpenTok) StopBroadcastContext(ctx context.Context, broadcastID string)
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
+	req.Header.Add("User-Agent", ot.userAgent)
 
 	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
@@ -276,7 +276,7 @@ func (ot *OpenTok) ListBroadcastsContext(ctx context.Context, opts *BroadcastLis
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
+	req.Header.Add("User-Agent", ot.userAgent)
 
 	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
@@ -324,7 +324,7 @@ func (ot *OpenTok) GetBroadcastContext(ctx context.Context, broadcastID string) 
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
+	req.Header.Add("User-Agent", ot.userAgent)
 
 	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
@@ -388,7 +388,7 @@ func (ot *OpenTok) SetBroadcastLayoutContext(ctx context.Context, broadcastID st
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
+	req.Header.Add("User-Agent", ot.userAgent)
 
 	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {

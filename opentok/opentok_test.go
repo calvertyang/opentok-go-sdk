@@ -12,12 +12,13 @@ import (
 const (
 	apiKey    = "<your api key here>"
 	apiSecret = "<your api secret here>"
+	userAgent = SDKName + "/" + SDKVersion
 )
 
 var ot = New(apiKey, apiSecret, http.DefaultClient)
 
 func TestNew(t *testing.T) {
-	expect := &OpenTok{apiKey, apiSecret, defaultAPIHost, nil}
+	expect := &OpenTok{apiKey, apiSecret, defaultAPIHost, userAgent, nil}
 
 	actual := New(apiKey, apiSecret, nil)
 

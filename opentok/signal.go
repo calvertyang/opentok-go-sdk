@@ -45,7 +45,7 @@ func (ot *OpenTok) SendSessionSignalContext(ctx context.Context, sessionID strin
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
+	req.Header.Add("User-Agent", ot.userAgent)
 
 	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
@@ -91,7 +91,7 @@ func (ot *OpenTok) SendConnectionSignalContext(ctx context.Context, sessionID, c
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
+	req.Header.Add("User-Agent", ot.userAgent)
 
 	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {

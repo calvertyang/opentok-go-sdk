@@ -76,7 +76,7 @@ func (ot *OpenTok) CreateProjectContext(ctx context.Context, projectName string)
 		req.Header.Add("Content-Type", "application/json")
 	}
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
+	req.Header.Add("User-Agent", ot.userAgent)
 
 	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
@@ -116,7 +116,7 @@ func (ot *OpenTok) ListProjectsContext(ctx context.Context) ([]*Project, error) 
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
+	req.Header.Add("User-Agent", ot.userAgent)
 
 	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
@@ -160,7 +160,7 @@ func (ot *OpenTok) GetProjectContext(ctx context.Context, projectAPIKey string) 
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
+	req.Header.Add("User-Agent", ot.userAgent)
 
 	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
@@ -212,7 +212,7 @@ func (ot *OpenTok) ChangeProjectStatusContext(ctx context.Context, projectAPIKey
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
+	req.Header.Add("User-Agent", ot.userAgent)
 
 	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
@@ -256,7 +256,7 @@ func (ot *OpenTok) RefreshProjectSecretContext(ctx context.Context, projectAPIKe
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
+	req.Header.Add("User-Agent", ot.userAgent)
 
 	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
@@ -301,7 +301,7 @@ func (ot *OpenTok) DeleteProjectContext(ctx context.Context, projectAPIKey strin
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
+	req.Header.Add("User-Agent", ot.userAgent)
 
 	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {

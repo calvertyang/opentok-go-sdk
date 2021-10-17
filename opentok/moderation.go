@@ -34,7 +34,7 @@ func (ot *OpenTok) ForceDisconnectContext(ctx context.Context, sessionID, connec
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", SDKName+"/"+SDKVersion)
+	req.Header.Add("User-Agent", ot.userAgent)
 
 	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {

@@ -34,6 +34,7 @@ type OpenTok struct {
 	apiKey    string
 	apiSecret string
 	apiHost   string
+	userAgent string
 
 	httpClient HTTPClient
 }
@@ -44,6 +45,7 @@ func New(apiKey, apiSecret string, client HTTPClient) *OpenTok {
 		apiKey:     apiKey,
 		apiSecret:  apiSecret,
 		apiHost:    defaultAPIHost,
+		userAgent:  SDKName + "/" + SDKVersion,
 		httpClient: client,
 	}
 }
