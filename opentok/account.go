@@ -48,7 +48,7 @@ type Project struct {
 	EnvironmentDescription string `json:"environmentDescription"`
 }
 
-// CreateProject creates an OpenTok API key and secret for a project..
+// CreateProject creates an OpenTok API key and secret for a project.
 func (ot *OpenTok) CreateProject(projectName string) (*Project, error) {
 	return ot.CreateProjectContext(context.Background(), projectName)
 }
@@ -96,12 +96,12 @@ func (ot *OpenTok) CreateProjectContext(ctx context.Context, projectName string)
 	return project, nil
 }
 
-// ListProjectsContext uses ctx for HTTP requests.
+// ListProjects returns the records for all projects.
 func (ot *OpenTok) ListProjects() ([]*Project, error) {
 	return ot.ListProjectsContext(context.Background())
 }
 
-// ListProjectsContext uses ctx for HTTP requests..
+// ListProjectsContext uses ctx for HTTP requests.
 func (ot *OpenTok) ListProjectsContext(ctx context.Context) ([]*Project, error) {
 	// Create jwt token
 	jwt, err := ot.jwtToken(accountToken)
@@ -276,7 +276,7 @@ func (ot *OpenTok) RefreshProjectSecretContext(ctx context.Context, projectAPIKe
 	return project, nil
 }
 
-// DeleteProjectContext prevents the use of the project API key (and
+// DeleteProject prevents the use of the project API key (and
 // any OpenTok sessions created with it).
 func (ot *OpenTok) DeleteProject(projectAPIKey string) error {
 	return ot.DeleteProjectContext(context.Background(), projectAPIKey)

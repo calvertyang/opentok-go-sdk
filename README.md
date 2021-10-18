@@ -1,6 +1,6 @@
 # OpenTok Go SDK
 
-[![API Reference](https://godoc.org/github.com/calvertyang/opentok-go-sdk?status.svg)](https://pkg.go.dev/github.com/calvertyang/opentok-go-sdk/v2@v2.1.1/opentok)
+[![API Reference](https://godoc.org/github.com/calvertyang/opentok-go-sdk?status.svg)](https://pkg.go.dev/github.com/calvertyang/opentok-go-sdk/v2)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/calvertyang/opentok-go-sdk)](https://github.com/calvertyang/opentok-go-sdk/releases/latest)
 [![Build Status](https://travis-ci.org/calvertyang/opentok-go-sdk.svg?branch=master)](https://travis-ci.org/calvertyang/opentok-go-sdk)
 [![Go Report Card](https://goreportcard.com/badge/github.com/calvertyang/opentok-go-sdk)](https://goreportcard.com/report/github.com/calvertyang/opentok-go-sdk)
@@ -13,10 +13,10 @@ The OpenTok Go SDK lets you generate
 working with OpenTok [archives](https://tokbox.com/developer/guides/archiving),
 working with OpenTok [live streaming
 broadcasts](https://tokbox.com/developer/guides/broadcast/live-streaming/),
-working with OpenTok [SIP interconnect](https://tokbox.com/developer/guides/sip),
+working with OpenTok [SIP interconnect](https://tokbox.com/developer/guides/sip)
 and [disconnecting clients from sessions](https://tokbox.com/developer/guides/moderation/rest/).
 
-For usage and more information, please refer to [GoDoc](https://pkg.go.dev/github.com/calvertyang/opentok-go-sdk/v2@v2.0.0/opentok).
+For usage and more information, please refer to [GoDoc](https://pkg.go.dev/github.com/calvertyang/opentok-go-sdk/v2).
 
 ## Installing
 
@@ -39,7 +39,7 @@ go get -u github.com/calvertyang/opentok-go-sdk
 ```go
 import "github.com/calvertyang/opentok-go-sdk/opentok"
 
-ot := opentok.New(apiKey, apiSecret)
+ot := opentok.New(apiKey, apiSecret, &http.Client{})
 ```
 
 > For most API calls, use the API secret for the specific project in your account.

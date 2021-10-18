@@ -77,7 +77,7 @@ type Broadcast struct {
 	// The OpenTok session ID.
 	SessionID string `json:"sessionId"`
 
-	// The API key associated with the broadcast..
+	// The API key associated with the broadcast.
 	ProjectID int `json:"projectId"`
 
 	// The time at which the broadcast was created, in milliseconds since the
