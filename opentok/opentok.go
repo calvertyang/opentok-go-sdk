@@ -40,13 +40,13 @@ type OpenTok struct {
 }
 
 // New returns an initialized OpenTok instance with the API key and API secret.
-func New(apiKey, apiSecret string, client HTTPClient) *OpenTok {
+func New(apiKey, apiSecret string) *OpenTok {
 	return &OpenTok{
 		apiKey:     apiKey,
 		apiSecret:  apiSecret,
 		apiHost:    defaultAPIHost,
 		userAgent:  SDKName + "/" + SDKVersion,
-		httpClient: client,
+		httpClient: http.DefaultClient,
 	}
 }
 
@@ -59,6 +59,13 @@ func (ot *OpenTok) SetAPIHost(url string) error {
 	ot.apiHost = url
 
 	return nil
+}
+
+// SetHttpClient specifies http client, http.DefaultClient used by default.
+func (ot *OpenTok) SetHttpClient(client HTTPClient) {
+	if client != nil {
+		ot.httpClient = client
+	}
 }
 
 // Generate JWT token for API calls

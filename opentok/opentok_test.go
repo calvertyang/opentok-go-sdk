@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"testing"
+	"time"
 
 	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/assert"
@@ -15,12 +16,12 @@ const (
 	userAgent = SDKName + "/" + SDKVersion
 )
 
-var ot = New(apiKey, apiSecret, http.DefaultClient)
+var ot = New(apiKey, apiSecret)
 
 func TestNew(t *testing.T) {
-	expect := &OpenTok{apiKey, apiSecret, defaultAPIHost, userAgent, nil}
+	expect := &OpenTok{apiKey, apiSecret, defaultAPIHost, userAgent, http.DefaultClient}
 
-	actual := New(apiKey, apiSecret, nil)
+	actual := New(apiKey, apiSecret)
 
 	assert.Equal(t, expect, actual)
 }
@@ -34,8 +35,18 @@ func TestOpenTok_SetAPIHost(t *testing.T) {
 	assert.Equal(t, newAPIHost, ot.apiHost)
 }
 
+func TestOpenTok_SetHttpClient(t *testing.T) {
+	httpClient := &http.Client{
+		Timeout: 120 * time.Second,
+	}
+
+	ot.SetHttpClient(httpClient)
+
+	assert.Equal(t, httpClient, ot.httpClient)
+}
+
 func TestOpenTok_JwtToken(t *testing.T) {
-	ot := New(apiKey, apiSecret, nil)
+	ot := New(apiKey, apiSecret)
 
 	// Validate  project token
 	tokenString, err := ot.jwtToken(projectToken)
