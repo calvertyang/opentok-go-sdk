@@ -7,9 +7,3 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/stretchr/testify v1.7.0
 )
-
-// backward incompatible
-retract (
-	v2.1.1
-	v2.1.0
-)
