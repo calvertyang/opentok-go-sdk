@@ -56,10 +56,12 @@ type Resolution string
 // SDPortrait or HDPortrait.
 const (
 	// SDLandscape (640x480-pixel) archives have a 4:3 aspect ratio, the default.
+	//
 	// Deprecated: use SDLandscape instead.
 	SD Resolution = "640x480"
 
 	// HDLandscape (1280x720-pixel) archives have a 16:9 aspect ratio.
+	//
 	// Deprecated: use HDLandscape instead.
 	HD Resolution = "1280x720"
 
