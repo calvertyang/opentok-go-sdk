@@ -37,7 +37,7 @@ type BroadcastOutputOptions struct {
 	// information about a live streaming broadcast.
 	HLS *HLSConfig `json:"hls,omitempty"`
 
-	// The configuration of RTMP
+	// The configuration of RTMP.
 	RTMP []*RTMPConfig `json:"rtmp,omitempty"`
 }
 
@@ -97,7 +97,7 @@ type Broadcast struct {
 	// An object containing details about the HLS and RTMP broadcasts.
 	BroadcastURLs *BroadcastURLs `json:"broadcastUrls"`
 
-	// The instance of OpenTok
+	// The instance of OpenTok.
 	OpenTok *OpenTok `json:"-"`
 }
 
@@ -133,32 +133,38 @@ func (ot *OpenTok) StartBroadcast(sessionID string, opts *BroadcastOptions) (*Br
 
 // StartBroadcastContext uses ctx for HTTP requests.
 func (ot *OpenTok) StartBroadcastContext(ctx context.Context, sessionID string, opts *BroadcastOptions) (*Broadcast, error) {
-	opts.SessionID = sessionID
+	if opts == nil {
+		opts = &BroadcastOptions{
+			SessionID: sessionID,
+		}
+	} else {
+		opts.SessionID = sessionID
 
-	if opts.Layout != nil {
-		if opts.Layout.Type != BestFit && opts.Layout.Type != PIP && opts.Layout.Type != Custom &&
-			opts.Layout.Type != VerticalPresentation && opts.Layout.Type != HorizontalPresentation {
-			return nil, fmt.Errorf("Invalid type of layout for starting a live streaming broadcast")
+		if opts.Layout != nil {
+			if opts.Layout.Type != BestFit && opts.Layout.Type != PIP && opts.Layout.Type != Custom &&
+				opts.Layout.Type != VerticalPresentation && opts.Layout.Type != HorizontalPresentation {
+				return nil, fmt.Errorf("Invalid type of layout for starting a live streaming broadcast")
+			}
+
+			if opts.Layout.Type == Custom && opts.Layout.StyleSheet == "" {
+				return nil, fmt.Errorf("StyleSheet property of layout cannot be empty")
+			}
+
+			// For other layout types, do not set a stylesheet property.
+			if opts.Layout.Type != Custom && opts.Layout.StyleSheet != "" {
+				return nil, fmt.Errorf("Set stylesheet property only when using custom layout")
+			}
 		}
 
-		if opts.Layout.Type == Custom && opts.Layout.StyleSheet == "" {
-			return nil, fmt.Errorf("StyleSheet property of layout cannot be empty")
+		if opts.Resolution != "" && opts.Resolution != SD && opts.Resolution != HD {
+			return nil, fmt.Errorf("Invalid resolution for starting a live streaming broadcast")
 		}
-
-		// For other layout types, do not set a stylesheet property.
-		if opts.Layout.Type != Custom && opts.Layout.StyleSheet != "" {
-			return nil, fmt.Errorf("Set stylesheet property only when using custom layout")
-		}
-	}
-
-	if opts.Resolution != "" && opts.Resolution != SD && opts.Resolution != HD {
-		return nil, fmt.Errorf("Invalid resolution for starting a live streaming broadcast")
 	}
 
 	jsonStr, _ := json.Marshal(opts)
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return nil, err
 	}
@@ -171,16 +177,15 @@ func (ot *OpenTok) StartBroadcastContext(ctx context.Context, sessionID string, 
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	broadcast := &Broadcast{}
@@ -202,11 +207,11 @@ func (ot *OpenTok) StopBroadcast(broadcastID string) (*Broadcast, error) {
 // StopBroadcastContext uses ctx for HTTP requests.
 func (ot *OpenTok) StopBroadcastContext(ctx context.Context, broadcastID string) (*Broadcast, error) {
 	if broadcastID == "" {
-		return nil, fmt.Errorf("Live stremaing broadcast cannot be stopped without an broadcast ID")
+		return nil, fmt.Errorf("Live stremaing broadcast cannot be stopped without a broadcast ID")
 	}
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return nil, err
 	}
@@ -218,16 +223,15 @@ func (ot *OpenTok) StopBroadcastContext(ctx context.Context, broadcastID string)
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	broadcast := &Broadcast{}
@@ -251,20 +255,22 @@ func (ot *OpenTok) ListBroadcasts(opts *BroadcastListOptions) (*BroadcastList, e
 func (ot *OpenTok) ListBroadcastsContext(ctx context.Context, opts *BroadcastListOptions) (*BroadcastList, error) {
 	params := []string{"?"}
 
-	if opts.Offset != 0 {
-		params = append(params, "offset="+strconv.Itoa(opts.Offset))
-	}
+	if opts != nil {
+		if opts.Offset != 0 {
+			params = append(params, "offset="+strconv.Itoa(opts.Offset))
+		}
 
-	if opts.Count != 0 {
-		params = append(params, "count="+strconv.Itoa(opts.Count))
-	}
+		if opts.Count != 0 {
+			params = append(params, "count="+strconv.Itoa(opts.Count))
+		}
 
-	if opts.SessionID != "" {
-		params = append(params, "sessionId="+opts.SessionID)
+		if opts.SessionID != "" {
+			params = append(params, "sessionId="+opts.SessionID)
+		}
 	}
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return nil, err
 	}
@@ -276,16 +282,15 @@ func (ot *OpenTok) ListBroadcastsContext(ctx context.Context, opts *BroadcastLis
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	broadcastList := &BroadcastList{}
@@ -308,11 +313,11 @@ func (ot *OpenTok) GetBroadcast(broadcastID string) (*Broadcast, error) {
 // GetBroadcastContext uses ctx for HTTP requests.
 func (ot *OpenTok) GetBroadcastContext(ctx context.Context, broadcastID string) (*Broadcast, error) {
 	if broadcastID == "" {
-		return nil, fmt.Errorf("Cannot get broadcast information without an broadcast ID")
+		return nil, fmt.Errorf("Cannot get broadcast information without a broadcast ID")
 	}
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return nil, err
 	}
@@ -324,16 +329,15 @@ func (ot *OpenTok) GetBroadcastContext(ctx context.Context, broadcastID string) 
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	broadcast := &Broadcast{}
@@ -355,7 +359,7 @@ func (ot *OpenTok) SetBroadcastLayout(broadcastID string, layout *Layout) (*Broa
 // SetBroadcastLayoutContext uses ctx for HTTP requests.
 func (ot *OpenTok) SetBroadcastLayoutContext(ctx context.Context, broadcastID string, layout *Layout) (*Broadcast, error) {
 	if broadcastID == "" {
-		return nil, fmt.Errorf("Cannot change the layout type of a live streaming broadcast without an broadcast ID")
+		return nil, fmt.Errorf("Cannot change the layout type of a live streaming broadcast without a broadcast ID")
 	}
 
 	if layout.Type != BestFit && layout.Type != PIP && layout.Type != Custom &&
@@ -375,29 +379,28 @@ func (ot *OpenTok) SetBroadcastLayoutContext(ctx context.Context, broadcastID st
 	jsonStr, _ := json.Marshal(layout)
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return nil, err
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/broadcast/" + broadcastID + "/layout"
-	req, err := http.NewRequest("PUT", endpoint, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest(http.MethodPut, endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	broadcast := &Broadcast{}

@@ -39,7 +39,7 @@ go get -u github.com/calvertyang/opentok-go-sdk
 ```go
 import "github.com/calvertyang/opentok-go-sdk/opentok"
 
-ot := opentok.New(apiKey, apiSecret, &http.Client{})
+ot := opentok.New(apiKey, apiSecret)
 ```
 
 > For most API calls, use the API secret for the specific project in your account.

@@ -121,6 +121,16 @@ type SessionIDInfo struct {
 	CreateTime time.Time
 }
 
+//
+type MuteOptions struct {
+	// Active specifies whether streams published after this call, in addition to
+	// the current streams in the session, should be muted (true) or not (false).
+	Active bool
+
+	// ExcludedStreams specifies stream IDs for streams that should not be muted.
+	ExcludedStreams []string
+}
+
 // CreateSession generates a new session.
 func (ot *OpenTok) CreateSession(opts *SessionOptions) (*Session, error) {
 	return ot.CreateSessionContext(context.Background(), opts)
@@ -143,7 +153,7 @@ func (ot *OpenTok) CreateSessionContext(ctx context.Context, opts *SessionOption
 	}
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return nil, err
 	}
@@ -153,18 +163,18 @@ func (ot *OpenTok) CreateSessionContext(ctx context.Context, opts *SessionOption
 		return nil, err
 	}
 
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	var sessions []Session

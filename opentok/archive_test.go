@@ -273,7 +273,7 @@ func TestOpenTok_SetArchiveStorage(t *testing.T) {
 	ot.SetAPIHost(ts.URL)
 
 	expect := &StorageOptions{
-		Type: "s3",
+		Type: S3,
 		Config: map[string]interface{}{
 			"accessKey": "myUsername",
 			"bucket":    "example",
@@ -283,7 +283,7 @@ func TestOpenTok_SetArchiveStorage(t *testing.T) {
 	}
 
 	actual, err := ot.SetArchiveStorage(&StorageOptions{
-		Type: "s3",
+		Type: S3,
 		Config: &AmazonS3Config{
 			AccessKey: "myUsername",
 			SecretKey: "myPassword",

@@ -1,6 +1,8 @@
 package opentok
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -9,32 +11,46 @@ import (
 	"github.com/google/uuid"
 )
 
-// HTTPClient is an interface to allow custom clients and timeouts.
-type HTTPClient interface {
-	Do(req *http.Request) (*http.Response, error)
-}
-
-// OpenTok API host URL
+// OpenTok API host URL.
 const defaultAPIHost = "https://api.opentok.com"
 
-// For use in X-TB-TOKEN-AUTH header value
+// For use in X-TB-TOKEN-AUTH header value.
 const tokenSentinel = "T1=="
 
 type issueType string
 
 const (
-	// For most REST API calls, set issue type to "project"
+	// For most REST API calls, set issue type to "project".
 	projectToken issueType = "project"
-	// For Account Management REST methods, set issue type to "account"
+
+	// For Account Management REST methods, set issue type to "account".
 	accountToken issueType = "account"
 )
 
-// OpenTok stores the API key and secret for use in making API call
+// HTTPClient is an interface to allow custom clients and timeouts.
+type HTTPClient interface {
+	Do(r *http.Request) (*http.Response, error)
+}
+
+// OpenTokResponseError encloses an error with code and message.
+type OpenTokResponseError struct {
+	// StatusCode is the HTTP Response StatusCode that led to the error.
+	StatusCode int
+
+	// Message is the error message.
+	Message string `json:"message"`
+}
+
+// Error returns a formatted error message.
+func (e *OpenTokResponseError) Error() string {
+	return fmt.Sprintf("TokBox error: code: %d; message: %s", e.StatusCode, e.Message)
+}
+
+// OpenTok stores the API key and secret for use in making API call.
 type OpenTok struct {
 	apiKey    string
 	apiSecret string
 	apiHost   string
-	userAgent string
 
 	httpClient HTTPClient
 }
@@ -45,12 +61,11 @@ func New(apiKey, apiSecret string) *OpenTok {
 		apiKey:     apiKey,
 		apiSecret:  apiSecret,
 		apiHost:    defaultAPIHost,
-		userAgent:  SDKName + "/" + SDKVersion,
 		httpClient: http.DefaultClient,
 	}
 }
 
-// SetAPIHost is used to set OpenTok API Host to specific URL
+// SetAPIHost is used to set the OpenTok API Host to specific URL.
 func (ot *OpenTok) SetAPIHost(url string) error {
 	if url == "" {
 		return fmt.Errorf("OpenTok API Host cannot be empty")
@@ -68,7 +83,17 @@ func (ot *OpenTok) SetHttpClient(client HTTPClient) {
 	}
 }
 
-// Generate JWT token for API calls
+// Generate account-level JWT token for API calls.
+func (ot *OpenTok) genAccountJWT() (string, error) {
+	return ot.jwtToken(accountToken)
+}
+
+// Generate project-level JWT token for API calls.
+func (ot *OpenTok) genProjectJWT() (string, error) {
+	return ot.jwtToken(projectToken)
+}
+
+// Generate JWT token for API calls.
 func (ot *OpenTok) jwtToken(ist issueType) (string, error) {
 	type OpenTokClaims struct {
 		Ist issueType `json:"ist,omitempty"`
@@ -93,4 +118,28 @@ func (ot *OpenTok) jwtToken(ist issueType) (string, error) {
 
 	// Sign and get the complete encoded token as a string using the api secret
 	return token.SignedString([]byte(ot.apiSecret))
+}
+
+// Send HTTP request.
+func (ot *OpenTok) sendRequest(req *http.Request, ctx context.Context) (*http.Response, error) {
+	req.Header.Add("User-Agent", userAgent)
+
+	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+
+	return res, err
+}
+
+// Parse the error rresponse by custom error struct.
+func parseErrorResponse(res *http.Response) error {
+	resErr := &OpenTokResponseError{}
+	if err := json.NewDecoder(res.Body).Decode(resErr); err != nil {
+		return fmt.Errorf("Error decoding response from Tokbox: statusCode: %d; %w", res.StatusCode, err)
+	}
+
+	resErr.StatusCode = res.StatusCode
+
+	return resErr
 }

@@ -61,7 +61,7 @@ func (ot *OpenTok) ListStreamsContext(ctx context.Context, sessionID string) (*S
 	}
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return nil, err
 	}
@@ -73,16 +73,15 @@ func (ot *OpenTok) ListStreamsContext(ctx context.Context, sessionID string) (*S
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	streamList := &StreamList{}
@@ -109,7 +108,7 @@ func (ot *OpenTok) GetStreamContext(ctx context.Context, sessionID, streamID str
 	}
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return nil, err
 	}
@@ -121,16 +120,15 @@ func (ot *OpenTok) GetStreamContext(ctx context.Context, sessionID, streamID str
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	stream := &Stream{}
@@ -149,35 +147,34 @@ func (ot *OpenTok) SetStreamClassLists(sessionID string, opts *StreamClassOption
 // SetStreamClassListsContext uses ctx for HTTP requests.
 func (ot *OpenTok) SetStreamClassListsContext(ctx context.Context, sessionID string, opts *StreamClassOptions) (*StreamList, error) {
 	if sessionID == "" {
-		return nil, fmt.Errorf("Cannot change the live streaming layout classes for an OpenTok stream without an session ID")
+		return nil, fmt.Errorf("Cannot change the live streaming layout classes for an OpenTok stream without a session ID")
 	}
 
 	jsonStr, _ := json.Marshal(opts)
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return nil, err
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/session/" + sessionID + "/stream"
-	req, err := http.NewRequest("PUT", endpoint, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest(http.MethodPut, endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	streamList := &StreamList{}

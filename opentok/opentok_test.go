@@ -1,8 +1,11 @@
 package opentok
 
 import (
-	"log"
+	"bytes"
+	"context"
+	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -13,13 +16,12 @@ import (
 const (
 	apiKey    = "<your api key here>"
 	apiSecret = "<your api secret here>"
-	userAgent = SDKName + "/" + SDKVersion
 )
 
 var ot = New(apiKey, apiSecret)
 
 func TestNew(t *testing.T) {
-	expect := &OpenTok{apiKey, apiSecret, defaultAPIHost, userAgent, http.DefaultClient}
+	expect := &OpenTok{apiKey, apiSecret, defaultAPIHost, http.DefaultClient}
 
 	actual := New(apiKey, apiSecret)
 
@@ -45,42 +47,76 @@ func TestOpenTok_SetHttpClient(t *testing.T) {
 	assert.Equal(t, httpClient, ot.httpClient)
 }
 
-func TestOpenTok_JwtToken(t *testing.T) {
-	ot := New(apiKey, apiSecret)
-
-	// Validate  project token
-	tokenString, err := ot.jwtToken(projectToken)
-	if err != nil {
-		log.Fatal(err)
-	}
+func TestOpenTok_GenAccountJWT(t *testing.T) {
+	tokenString, err := ot.genProjectJWT()
+	assert.Nil(t, err)
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		assert.IsType(t, &jwt.SigningMethodHMAC{}, token.Method)
 
 		return []byte(apiSecret), nil
 	})
+	assert.Nil(t, err)
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 
 	if assert.True(t, ok) {
-		assert.Equal(t, "project", claims["ist"])
+		assert.Equal(t, string(projectToken), claims["ist"])
 	}
+}
 
-	// Validate account token
-	tokenString, err = ot.jwtToken(accountToken)
-	if err != nil {
-		log.Fatal(err)
-	}
+func TestOpenTok_GenProjectJWT(t *testing.T) {
+	tokenString, err := ot.genAccountJWT()
+	assert.Nil(t, err)
 
-	token, err = jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		assert.IsType(t, &jwt.SigningMethodHMAC{}, token.Method)
 
 		return []byte(apiSecret), nil
 	})
+	assert.Nil(t, err)
 
-	claims, ok = token.Claims.(jwt.MapClaims)
+	claims, ok := token.Claims.(jwt.MapClaims)
 
 	if assert.True(t, ok) {
-		assert.Equal(t, "account", claims["ist"])
+		assert.Equal(t, string(accountToken), claims["ist"])
 	}
+}
+
+func TestOpenTok_SendRequest(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+	ot.SetAPIHost(ts.URL)
+
+	req, _ := http.NewRequest(http.MethodGet, ot.apiHost, nil)
+	res, err := ot.sendRequest(req, context.Background())
+
+	assert.Nil(t, err)
+	assert.IsType(t, &http.Response{}, res)
+}
+
+func TestOpenTok_ParseErrorResponse(t *testing.T) {
+	sampleRes := http.Response{
+		StatusCode: 400,
+		Body: ioutil.NopCloser(bytes.NewBufferString(`
+			{
+				"code": 10101,
+				"message": "Invalid session id format",
+				"description": "Invalid session id format"
+			}
+		`)),
+	}
+
+	expect := &OpenTokResponseError{
+		StatusCode: 400,
+		Message:    "Invalid session id format",
+	}
+
+	actual := parseErrorResponse(&sampleRes)
+
+	assert.Equal(t, expect.Error(), actual.Error())
 }

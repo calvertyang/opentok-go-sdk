@@ -82,11 +82,11 @@ func (ot *OpenTok) Dial(sessionID string, opts *DialOptions) (*SIPCall, error) {
 // DialContext uses ctx for HTTP requests.
 func (ot *OpenTok) DialContext(ctx context.Context, sessionID string, opts *DialOptions) (*SIPCall, error) {
 	if sessionID == "" {
-		return nil, fmt.Errorf("SIP call cannot be initiated without an session ID")
+		return nil, fmt.Errorf("SIP call cannot be initiated without a session ID")
 	}
 
 	if opts.SIP.URI == "" {
-		return nil, fmt.Errorf("SIP call cannot be initiated without an SIP URI")
+		return nil, fmt.Errorf("SIP call cannot be initiated without a SIP URI")
 	}
 
 	token, err := ot.GenerateToken(sessionID, &TokenOptions{
@@ -102,7 +102,7 @@ func (ot *OpenTok) DialContext(ctx context.Context, sessionID string, opts *Dial
 	jsonStr, _ := json.Marshal(opts)
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return nil, err
 	}
@@ -115,16 +115,15 @@ func (ot *OpenTok) DialContext(ctx context.Context, sessionID string, opts *Dial
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	sipCall := &SIPCall{}

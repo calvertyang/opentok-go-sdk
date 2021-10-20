@@ -32,7 +32,7 @@ func (ot *OpenTok) SendSessionSignalContext(ctx context.Context, sessionID strin
 	jsonStr, _ := json.Marshal(data)
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return err
 	}
@@ -45,16 +45,15 @@ func (ot *OpenTok) SendSessionSignalContext(ctx context.Context, sessionID strin
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 204 {
-		return fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return parseErrorResponse(res)
 	}
 
 	return nil
@@ -78,7 +77,7 @@ func (ot *OpenTok) SendConnectionSignalContext(ctx context.Context, sessionID, c
 	jsonStr, _ := json.Marshal(data)
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return err
 	}
@@ -91,16 +90,15 @@ func (ot *OpenTok) SendConnectionSignalContext(ctx context.Context, sessionID, c
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 204 {
-		return fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return parseErrorResponse(res)
 	}
 
 	return nil

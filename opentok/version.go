@@ -1,7 +1,32 @@
 package opentok
 
-// SDKName is the name of this SDK
-const SDKName = "OpenTok-Go-SDK"
+import (
+	"fmt"
+	"runtime"
+)
 
-// SDKVersion is the version of this SDK
-const SDKVersion = "2.2.0"
+// sdkName specifies the name of the SDK
+const sdkName = "opentok-go-sdk"
+
+// sdkVersion specifies the version of the SDK
+const sdkVersion = "2.2.0"
+
+var (
+	userAgent = fmt.Sprintf("Go/%s (%s-%s) %s/%s",
+		runtime.Version(),
+		runtime.GOARCH,
+		runtime.GOOS,
+		sdkName,
+		sdkVersion,
+	)
+)
+
+// UserAgent returns a string containing the Go version, system architecture and OS, and the opentok-go-sdk version.
+func UserAgent() string {
+	return userAgent
+}
+
+// Version returns the semantic version (see http://semver.org).
+func Version() string {
+	return sdkVersion
+}

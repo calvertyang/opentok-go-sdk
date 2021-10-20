@@ -10,7 +10,7 @@ import (
 
 const projectURL = "/v2/project"
 
-// ProjectStatus is the alias of string type
+// ProjectStatus is the alias of string type.
 type ProjectStatus string
 
 const (
@@ -23,28 +23,28 @@ const (
 	ProjectSuspended ProjectStatus = "SUSPENDED"
 )
 
-// Project defines the response returned from API
+// Project defines the response returned from API.
 type Project struct {
-	// The OpenTok project API key
+	// The OpenTok project API key.
 	ID string `json:"id"`
 
-	// The OpenTok project API secret
+	// The OpenTok project API secret.
 	Secret string `json:"secret"`
 
 	// Whether the project is active ("VALID", "ACTIVE") or suspended ("SUSPENDED").
 	Status string `json:"status"`
 
 	// The name, if you specified one when creating the project; or an empty
-	// string if you did not specify a name
+	// string if you did not specify a name.
 	Name string `json:"name"`
 
-	// The time at which the project was created (a UNIX timestamp, in milliseconds)
+	// The time at which the project was created (a UNIX timestamp, in milliseconds).
 	CreatedAt int `json:"createdAt"`
 
-	// The environment name that project is running on
+	// The environment name that project is running on.
 	EnvironmentName string `json:"environmentName"`
 
-	// The environment description that project is running on
+	// The environment description that project is running on.
 	EnvironmentDescription string `json:"environmentDescription"`
 }
 
@@ -57,11 +57,11 @@ func (ot *OpenTok) CreateProject(projectName string) (*Project, error) {
 func (ot *OpenTok) CreateProjectContext(ctx context.Context, projectName string) (*Project, error) {
 	jsonStr := []byte{}
 	if projectName != "" {
-		jsonStr = []byte(`{ "name": "` + projectName + `" }`)
+		jsonStr = []byte(`{"name": "` + projectName + `"}`)
 	}
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(accountToken)
+	jwt, err := ot.genAccountJWT()
 	if err != nil {
 		return nil, err
 	}
@@ -76,16 +76,15 @@ func (ot *OpenTok) CreateProjectContext(ctx context.Context, projectName string)
 		req.Header.Add("Content-Type", "application/json")
 	}
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	project := &Project{}
@@ -104,7 +103,7 @@ func (ot *OpenTok) ListProjects() ([]*Project, error) {
 // ListProjectsContext uses ctx for HTTP requests.
 func (ot *OpenTok) ListProjectsContext(ctx context.Context) ([]*Project, error) {
 	// Create jwt token
-	jwt, err := ot.jwtToken(accountToken)
+	jwt, err := ot.genAccountJWT()
 	if err != nil {
 		return nil, err
 	}
@@ -116,16 +115,15 @@ func (ot *OpenTok) ListProjectsContext(ctx context.Context) ([]*Project, error) 
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	projects := []*Project{}
@@ -148,7 +146,7 @@ func (ot *OpenTok) GetProjectContext(ctx context.Context, projectAPIKey string) 
 	}
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(accountToken)
+	jwt, err := ot.genAccountJWT()
 	if err != nil {
 		return nil, err
 	}
@@ -160,16 +158,15 @@ func (ot *OpenTok) GetProjectContext(ctx context.Context, projectAPIKey string) 
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	project := &Project{}
@@ -180,8 +177,9 @@ func (ot *OpenTok) GetProjectContext(ctx context.Context, projectAPIKey string) 
 	return project, nil
 }
 
-// ChangeProjectStatus changes the status of project. The status is
-// either active or suspended.
+// ChangeProjectStatus changes the project's status. The status is either
+// active or suspended.
+// You can change a project's status from active to suspended and back.
 func (ot *OpenTok) ChangeProjectStatus(projectAPIKey string, projectStatus ProjectStatus) (*Project, error) {
 	return ot.ChangeProjectStatusContext(context.Background(), projectAPIKey, projectStatus)
 }
@@ -199,29 +197,28 @@ func (ot *OpenTok) ChangeProjectStatusContext(ctx context.Context, projectAPIKey
 	jsonStr := []byte(`{ "status": "` + projectStatus + `" }`)
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(accountToken)
+	jwt, err := ot.genAccountJWT()
 	if err != nil {
 		return nil, err
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + projectAPIKey
-	req, err := http.NewRequest("PUT", endpoint, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest(http.MethodPut, endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	project := &Project{}
@@ -244,7 +241,7 @@ func (ot *OpenTok) RefreshProjectSecretContext(ctx context.Context, projectAPIKe
 	}
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(accountToken)
+	jwt, err := ot.genAccountJWT()
 	if err != nil {
 		return nil, err
 	}
@@ -256,16 +253,15 @@ func (ot *OpenTok) RefreshProjectSecretContext(ctx context.Context, projectAPIKe
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	project := &Project{}
@@ -276,8 +272,8 @@ func (ot *OpenTok) RefreshProjectSecretContext(ctx context.Context, projectAPIKe
 	return project, nil
 }
 
-// DeleteProject prevents the use of the project API key (and
-// any OpenTok sessions created with it).
+// DeleteProject prevents the use of the project API key (and any OpenTok
+// sessions created with it).
 func (ot *OpenTok) DeleteProject(projectAPIKey string) error {
 	return ot.DeleteProjectContext(context.Background(), projectAPIKey)
 }
@@ -289,28 +285,27 @@ func (ot *OpenTok) DeleteProjectContext(ctx context.Context, projectAPIKey strin
 	}
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(accountToken)
+	jwt, err := ot.genAccountJWT()
 	if err != nil {
 		return err
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + projectAPIKey
-	req, err := http.NewRequest("DELETE", endpoint, nil)
+	req, err := http.NewRequest(http.MethodDelete, endpoint, nil)
 	if err != nil {
 		return err
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 204 {
-		return fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return parseErrorResponse(res)
 	}
 
 	return nil

@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-// ForceDisconnect disconnects a client from an OpenTok session via server-side
+// ForceDisconnect disconnects a client from an OpenTok session via server-side.
 func (ot *OpenTok) ForceDisconnect(sessionID, connectionID string) error {
 	return ot.ForceDisconnectContext(context.Background(), sessionID, connectionID)
 }
@@ -22,28 +22,27 @@ func (ot *OpenTok) ForceDisconnectContext(ctx context.Context, sessionID, connec
 	}
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return err
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/session/" + sessionID + "/connection/" + connectionID
-	req, err := http.NewRequest("DELETE", endpoint, nil)
+	req, err := http.NewRequest(http.MethodDelete, endpoint, nil)
 	if err != nil {
 		return err
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 204 {
-		return fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return parseErrorResponse(res)
 	}
 
 	return nil

@@ -52,18 +52,46 @@ const (
 // Resolution is the alias of string type.
 type Resolution string
 
-// The resolution of the archive, either SD(default) or HD.
+// The resolution of the archive, either SDLandscape(default), HDLandscape,
+// SDPortrait or HDPortrait.
 const (
-	// SD (640x480-pixel) archives have a 4:3 aspect ratio.
+	// SDLandscape (640x480-pixel) archives have a 4:3 aspect ratio, the default.
+	// Deprecated: use SDLandscape instead.
 	SD Resolution = "640x480"
-	// HD (1280x720-pixel) archives have a 16:9 aspect ratio.
+
+	// HDLandscape (1280x720-pixel) archives have a 16:9 aspect ratio.
+	// Deprecated: use HDLandscape instead.
 	HD Resolution = "1280x720"
+
+	// SDLandscape (640x480-pixel) archives have a 4:3 aspect ratio, the default.
+	SDLandscape Resolution = "640x480"
+
+	// HDLandscape (1280x720-pixel) archives have a 16:9 aspect ratio.
+	HDLandscape Resolution = "1280x720"
+
+	// SDPortrait (480x640-pixel) archives have a 3:4 aspect ratio.
+	SDPortrait Resolution = "480x640"
+
+	// HDPortrait (720x1280-pixel) archives have a 9:16 aspect ratio.
+	HDPortrait Resolution = "720x1280"
+)
+
+// StorageType is the alias of string type.
+type StorageType string
+
+const (
+	// Azure specifies the Azure storage type
+	Azure StorageType = "azure"
+
+	// S3 specifies the Amazon S3 storage type
+	S3 StorageType = "s3"
 )
 
 // Layout defines the layout type for the archive.
 type Layout struct {
-	Type       LayoutType `json:"type,omitempty"`
-	StyleSheet string     `json:"stylesheet,omitempty"`
+	Type            LayoutType `json:"type,omitempty"`
+	StyleSheet      string     `json:"stylesheet,omitempty"`
+	ScreenShareType LayoutType `json:"screenshareType,omitempty"`
 }
 
 // ArchiveOptions defines the options for starting an archive recording.
@@ -198,7 +226,7 @@ type AzureConfig struct {
 // StorageOptions defines the options for setting archiving upload target.
 type StorageOptions struct {
 	// Type of upload target.
-	Type string `json:"type"`
+	Type StorageType `json:"type"`
 
 	// Settings for the target.
 	Config interface{} `json:"config"`
@@ -222,36 +250,44 @@ func (ot *OpenTok) StartArchive(sessionID string, opts *ArchiveOptions) (*Archiv
 
 // StartArchiveContext uses ctx for HTTP requests.
 func (ot *OpenTok) StartArchiveContext(ctx context.Context, sessionID string, opts *ArchiveOptions) (*Archive, error) {
-	opts.SessionID = sessionID
+	if opts == nil {
+		opts = &ArchiveOptions{
+			SessionID: sessionID,
+		}
+	} else {
+		opts.SessionID = sessionID
 
-	if opts.Layout != nil {
-		if opts.Layout.Type != BestFit && opts.Layout.Type != PIP && opts.Layout.Type != Custom &&
-			opts.Layout.Type != VerticalPresentation && opts.Layout.Type != HorizontalPresentation {
-			return nil, fmt.Errorf("Invalid type of layout for start archive")
+		if opts.Layout != nil {
+			if opts.Layout.Type != BestFit && opts.Layout.Type != PIP && opts.Layout.Type != Custom &&
+				opts.Layout.Type != VerticalPresentation && opts.Layout.Type != HorizontalPresentation {
+				return nil, fmt.Errorf("Invalid type of layout for start archive")
+			}
+
+			if opts.Layout.Type == Custom && opts.Layout.StyleSheet == "" {
+				return nil, fmt.Errorf("StyleSheet property of layout cannot be empty")
+			}
+
+			// For other layout types, do not set a stylesheet property.
+			if opts.Layout.Type != Custom && opts.Layout.StyleSheet != "" {
+				return nil, fmt.Errorf("Set stylesheet property only when using custom layout")
+			}
 		}
 
-		if opts.Layout.Type == Custom && opts.Layout.StyleSheet == "" {
-			return nil, fmt.Errorf("StyleSheet property of layout cannot be empty")
+		if opts.OutputMode != "" && opts.OutputMode != Composed && opts.OutputMode != Individual {
+			return nil, fmt.Errorf("Invalid output mode for start archive")
 		}
 
-		// For other layout types, do not set a stylesheet property.
-		if opts.Layout.Type != Custom && opts.Layout.StyleSheet != "" {
-			return nil, fmt.Errorf("Set stylesheet property only when using custom layout")
+		if opts.Resolution != "" && opts.Resolution != SD && opts.Resolution != HD &&
+			opts.Resolution != SDLandscape && opts.Resolution != HDLandscape &&
+			opts.Resolution != SDPortrait && opts.Resolution != HDPortrait {
+			return nil, fmt.Errorf("Invalid resolution for start archive")
 		}
-	}
-
-	if opts.OutputMode != "" && opts.OutputMode != Composed && opts.OutputMode != Individual {
-		return nil, fmt.Errorf("Invalid output mode for start archive")
-	}
-
-	if opts.Resolution != "" && opts.Resolution != SD && opts.Resolution != HD {
-		return nil, fmt.Errorf("Invalid resolution for start archive")
 	}
 
 	jsonStr, _ := json.Marshal(opts)
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return nil, err
 	}
@@ -264,16 +300,15 @@ func (ot *OpenTok) StartArchiveContext(ctx context.Context, sessionID string, op
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	archive := &Archive{}
@@ -302,7 +337,7 @@ func (ot *OpenTok) StopArchiveContext(ctx context.Context, archiveID string) (*A
 	}
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return nil, err
 	}
@@ -314,16 +349,15 @@ func (ot *OpenTok) StopArchiveContext(ctx context.Context, archiveID string) (*A
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	archive := &Archive{}
@@ -336,8 +370,8 @@ func (ot *OpenTok) StopArchiveContext(ctx context.Context, archiveID string) (*A
 	return archive, nil
 }
 
-// ListArchives returns the records of all archives for your project that are
-// in progress.
+// ListArchives returns both completed and in-progress archive records of
+// the project.
 func (ot *OpenTok) ListArchives(opts *ArchiveListOptions) (*ArchiveList, error) {
 	return ot.ListArchivesContext(context.Background(), opts)
 }
@@ -346,20 +380,22 @@ func (ot *OpenTok) ListArchives(opts *ArchiveListOptions) (*ArchiveList, error) 
 func (ot *OpenTok) ListArchivesContext(ctx context.Context, opts *ArchiveListOptions) (*ArchiveList, error) {
 	params := []string{"?"}
 
-	if opts.Offset != 0 {
-		params = append(params, "offset="+strconv.Itoa(opts.Offset))
-	}
+	if opts != nil {
+		if opts.Offset != 0 {
+			params = append(params, "offset="+strconv.Itoa(opts.Offset))
+		}
 
-	if opts.Count != 0 {
-		params = append(params, "count="+strconv.Itoa(opts.Count))
-	}
+		if opts.Count != 0 {
+			params = append(params, "count="+strconv.Itoa(opts.Count))
+		}
 
-	if opts.SessionID != "" {
-		params = append(params, "sessionId="+opts.SessionID)
+		if opts.SessionID != "" {
+			params = append(params, "sessionId="+opts.SessionID)
+		}
 	}
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return nil, err
 	}
@@ -371,16 +407,15 @@ func (ot *OpenTok) ListArchivesContext(ctx context.Context, opts *ArchiveListOpt
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	archiveList := &ArchiveList{}
@@ -407,7 +442,7 @@ func (ot *OpenTok) GetArchiveContext(ctx context.Context, archiveID string) (*Ar
 	}
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return nil, err
 	}
@@ -419,16 +454,15 @@ func (ot *OpenTok) GetArchiveContext(ctx context.Context, archiveID string) (*Ar
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	archive := &Archive{}
@@ -453,28 +487,27 @@ func (ot *OpenTok) DeleteArchiveContext(ctx context.Context, archiveID string) e
 	}
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return err
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/archive/" + archiveID
-	req, err := http.NewRequest("DELETE", endpoint, nil)
+	req, err := http.NewRequest(http.MethodDelete, endpoint, nil)
 	if err != nil {
 		return err
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 204 {
-		return fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return parseErrorResponse(res)
 	}
 
 	return nil
@@ -488,7 +521,7 @@ func (ot *OpenTok) SetArchiveStorage(opts *StorageOptions) (*StorageOptions, err
 
 // SetArchiveStorageContext uses ctx for HTTP requests.
 func (ot *OpenTok) SetArchiveStorageContext(ctx context.Context, opts *StorageOptions) (*StorageOptions, error) {
-	if opts.Type != "s3" && opts.Type != "azure" {
+	if opts.Type != S3 && opts.Type != Azure {
 		return nil, fmt.Errorf("Only support Amazon S3 or Microsoft Azure for upload completed archives")
 	}
 
@@ -524,29 +557,28 @@ func (ot *OpenTok) SetArchiveStorageContext(ctx context.Context, opts *StorageOp
 	jsonStr, _ := json.Marshal(opts)
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return nil, err
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/archive/storage"
-	req, err := http.NewRequest("PUT", endpoint, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest(http.MethodPut, endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	options := &StorageOptions{}
@@ -565,34 +597,34 @@ func (ot *OpenTok) DeleteArchiveStorage() error {
 // DeleteArchiveStorageContext uses ctx for HTTP requests.
 func (ot *OpenTok) DeleteArchiveStorageContext(ctx context.Context) error {
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return err
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/archive/storage"
-	req, err := http.NewRequest("DELETE", endpoint, nil)
+	req, err := http.NewRequest(http.MethodDelete, endpoint, nil)
 	if err != nil {
 		return err
 	}
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 204 {
-		return fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return parseErrorResponse(res)
 	}
 
 	return nil
 }
 
-// SetArchiveLayout dynamically change the layout type of a composed archive.
+// SetArchiveLayout dynamically change the layout type of a composed archive
+// while it is being recorded.
 func (ot *OpenTok) SetArchiveLayout(archiveID string, layout *Layout) (*Archive, error) {
 	return ot.SetArchiveLayoutContext(context.Background(), archiveID, layout)
 }
@@ -620,29 +652,28 @@ func (ot *OpenTok) SetArchiveLayoutContext(ctx context.Context, archiveID string
 	jsonStr, _ := json.Marshal(layout)
 
 	// Create jwt token
-	jwt, err := ot.jwtToken(projectToken)
+	jwt, err := ot.genProjectJWT()
 	if err != nil {
 		return nil, err
 	}
 
 	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/archive/" + archiveID + "/layout"
-	req, err := http.NewRequest("PUT", endpoint, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest(http.MethodPut, endpoint, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
-	req.Header.Add("User-Agent", ot.userAgent)
 
-	res, err := ot.httpClient.Do(req.WithContext(ctx))
+	res, err := ot.sendRequest(req, ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Tokbox returns error code: %v", res.StatusCode)
+		return nil, parseErrorResponse(res)
 	}
 
 	archive := &Archive{}
