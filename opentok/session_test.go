@@ -65,6 +65,90 @@ func TestOpenTok_GenerateToken(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestOpenTok_MuteSession(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`
+			{
+				"id": "40000001",
+				"secret": "ba7816bf8f01cfea414140de5dae2223b00361a3",
+				"status": "VALID",
+				"name": "example",
+				"createdAt": 1579163008000,
+				"environmentName": "default",
+				"environmentDescription": "Standard Environment"
+			}
+		`))
+	}))
+	defer ts.Close()
+	ot.SetAPIHost(ts.URL)
+
+	expect := &Project{
+		ID:                     "40000001",
+		Secret:                 "ba7816bf8f01cfea414140de5dae2223b00361a3",
+		Status:                 "VALID",
+		Name:                   "example",
+		CreatedAt:              1579163008000,
+		EnvironmentName:        "default",
+		EnvironmentDescription: "Standard Environment",
+	}
+
+	actual, err := ot.MuteSession("1_QX90NjQ2MCY0Nm6-MTU4QTO4NzE5NTkyOX4yUy2OZndKQExJR0NyalcvNktmTzBpSnp-QX4", &MuteOptions{
+		Active: true,
+		ExcludedStreams: []string{
+			"a919b531-bd0e-41fb-8ff0-cdc15684cc93",
+			"7f6d8780-741a-4824-98da-16c1f5f1f043",
+		},
+	})
+
+	assert.Nil(t, err)
+
+	if assert.NotNil(t, actual) {
+		assert.Equal(t, expect, actual)
+	}
+}
+
+func TestOpenTok_MuteStream(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`
+			{
+				"id": "40000001",
+				"secret": "ba7816bf8f01cfea414140de5dae2223b00361a3",
+				"status": "VALID",
+				"name": "example",
+				"createdAt": 1579163008000,
+				"environmentName": "default",
+				"environmentDescription": "Standard Environment"
+			}
+		`))
+	}))
+	defer ts.Close()
+	ot.SetAPIHost(ts.URL)
+
+	expect := &Project{
+		ID:                     "40000001",
+		Secret:                 "ba7816bf8f01cfea414140de5dae2223b00361a3",
+		Status:                 "VALID",
+		Name:                   "example",
+		CreatedAt:              1579163008000,
+		EnvironmentName:        "default",
+		EnvironmentDescription: "Standard Environment",
+	}
+
+	actual, err := ot.MuteStream("1_QX90NjQ2MCY0Nm6-MTU4QTO4NzE5NTkyOX4yUy2OZndKQExJR0NyalcvNktmTzBpSnp-QX4", "7f6d8780-741a-4824-98da-16c1f5f1f043")
+
+	assert.Nil(t, err)
+
+	if assert.NotNil(t, actual) {
+		assert.Equal(t, expect, actual)
+	}
+}
+
 func TestSession_GenerateToken(t *testing.T) {
 	session := &Session{
 		SessionID: "1_MX48eW91ciBhcGkga2V5IGhlcmU-fn4xNTc3ODY1NjAwMDAwfng3YjQ4TVFnRGYrWVFGcVBRaDh2VmZPS34",
@@ -76,6 +160,102 @@ func TestSession_GenerateToken(t *testing.T) {
 	})
 
 	assert.Nil(t, err)
+}
+
+func TestSession_Mute(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`
+			{
+				"id": "40000001",
+				"secret": "ba7816bf8f01cfea414140de5dae2223b00361a3",
+				"status": "VALID",
+				"name": "example",
+				"createdAt": 1579163008000,
+				"environmentName": "default",
+				"environmentDescription": "Standard Environment"
+			}
+		`))
+	}))
+	defer ts.Close()
+	ot.SetAPIHost(ts.URL)
+
+	expect := &Project{
+		ID:                     "40000001",
+		Secret:                 "ba7816bf8f01cfea414140de5dae2223b00361a3",
+		Status:                 "VALID",
+		Name:                   "example",
+		CreatedAt:              1579163008000,
+		EnvironmentName:        "default",
+		EnvironmentDescription: "Standard Environment",
+	}
+
+	session := &Session{
+		SessionID: "1_MX48eW91ciBhcGkga2V5IGhlcmU-fn4xNTc3ODY1NjAwMDAwfng3YjQ4TVFnRGYrWVFGcVBRaDh2VmZPS34",
+		ProjectID: apiKey,
+		OpenTok:   ot,
+	}
+
+	actual, err := session.Mute(&MuteOptions{
+		Active: true,
+		ExcludedStreams: []string{
+			"a919b531-bd0e-41fb-8ff0-cdc15684cc93",
+			"7f6d8780-741a-4824-98da-16c1f5f1f043",
+		},
+	})
+
+	assert.Nil(t, err)
+
+	if assert.NotNil(t, actual) {
+		assert.Equal(t, expect, actual)
+	}
+}
+
+func TestSession_MuteStream(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`
+			{
+				"id": "40000001",
+				"secret": "ba7816bf8f01cfea414140de5dae2223b00361a3",
+				"status": "VALID",
+				"name": "example",
+				"createdAt": 1579163008000,
+				"environmentName": "default",
+				"environmentDescription": "Standard Environment"
+			}
+		`))
+	}))
+	defer ts.Close()
+	ot.SetAPIHost(ts.URL)
+
+	expect := &Project{
+		ID:                     "40000001",
+		Secret:                 "ba7816bf8f01cfea414140de5dae2223b00361a3",
+		Status:                 "VALID",
+		Name:                   "example",
+		CreatedAt:              1579163008000,
+		EnvironmentName:        "default",
+		EnvironmentDescription: "Standard Environment",
+	}
+
+	session := &Session{
+		SessionID: "1_MX48eW91ciBhcGkga2V5IGhlcmU-fn4xNTc3ODY1NjAwMDAwfng3YjQ4TVFnRGYrWVFGcVBRaDh2VmZPS34",
+		ProjectID: apiKey,
+		OpenTok:   ot,
+	}
+
+	actual, err := session.MuteStream("7f6d8780-741a-4824-98da-16c1f5f1f043")
+
+	assert.Nil(t, err)
+
+	if assert.NotNil(t, actual) {
+		assert.Equal(t, expect, actual)
+	}
 }
 
 func TestDecodeSessionID(t *testing.T) {

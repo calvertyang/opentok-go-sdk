@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 )
 
 // SIPHeaders is the alias of map[string]string type
@@ -132,4 +133,138 @@ func (ot *OpenTok) DialContext(ctx context.Context, sessionID string, opts *Dial
 	}
 
 	return sipCall, nil
+}
+
+// SendDTMF sends the DTMF digits to all clients connected to the session.
+func (ot *OpenTok) SendDTMF(sessionID string, digits string) error {
+	return ot.SendDTMFContext(context.Background(), sessionID, digits)
+}
+
+// SendDTMFContext uses ctx for HTTP requests.
+func (ot *OpenTok) SendDTMFContext(ctx context.Context, sessionID, digits string) error {
+	if sessionID == "" {
+		return fmt.Errorf("DTMF digits cannot be sent without a session ID")
+	}
+
+	if digits == "" {
+		return fmt.Errorf("The DTMF digits cannot be empty")
+	}
+
+	match, err := regexp.MatchString(`^[\d#*p]+$`, digits)
+	if !match || err != nil {
+		return fmt.Errorf("The DTMF digits is invalid")
+	}
+
+	jsonStr := []byte(`{ "digits": "` + digits + `" }`)
+
+	// Create jwt token
+	jwt, err := ot.genProjectJWT()
+	if err != nil {
+		return err
+	}
+
+	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/session/" + sessionID + "/play-dtmf"
+	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("X-OPENTOK-AUTH", jwt)
+
+	res, err := ot.sendRequest(req, ctx)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return parseErrorResponse(res)
+	}
+
+	return nil
+}
+
+// sends the DTMF tones to a specific client connected to the session.
+func (ot *OpenTok) SendDTMFToClient(sessionID, connectionID, digits string) error {
+	return ot.SendDTMFToClientContext(context.Background(), sessionID, connectionID, digits)
+}
+
+// SendDTMFToClientContext uses ctx for HTTP requests.
+func (ot *OpenTok) SendDTMFToClientContext(ctx context.Context, sessionID, connectionID, digits string) error {
+	if sessionID == "" {
+		return fmt.Errorf("DTMF digits cannot be sent without a session ID")
+	}
+
+	if connectionID == "" {
+		return fmt.Errorf("DTMF digits cannot be sent without a connection ID")
+	}
+
+	if digits == "" {
+		return fmt.Errorf("The DTMF digits cannot be empty")
+	}
+
+	match, err := regexp.MatchString(`^[\d#*p]+$`, digits)
+	if !match || err != nil {
+		return fmt.Errorf("The DTMF digits is invalid")
+	}
+
+	jsonStr := []byte(`{ "digits": "` + digits + `" }`)
+
+	// Create jwt token
+	jwt, err := ot.genProjectJWT()
+	if err != nil {
+		return err
+	}
+
+	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/session/" + sessionID + "/connection/" + connectionID + "/play-dtmf"
+	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("X-OPENTOK-AUTH", jwt)
+
+	res, err := ot.sendRequest(req, ctx)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return parseErrorResponse(res)
+	}
+
+	return nil
+}
+
+// Dial connects your SIP platform to an OpenTok session.
+func (s *Session) Dial(opts *DialOptions) (*SIPCall, error) {
+	return s.DialContext(context.Background(), opts)
+}
+
+// DialContext uses ctx for HTTP requests.
+func (s *Session) DialContext(ctx context.Context, opts *DialOptions) (*SIPCall, error) {
+	return s.OpenTok.DialContext(ctx, s.SessionID, opts)
+}
+
+// SendDTMF sends the DTMF digits to all clients connected to the session.
+func (s *Session) SendDTMF(digits string) error {
+	return s.SendDTMFContext(context.Background(), digits)
+}
+
+// SendDTMFContext uses ctx for HTTP requests.
+func (s *Session) SendDTMFContext(ctx context.Context, digits string) error {
+	return s.OpenTok.SendDTMFContext(ctx, s.SessionID, digits)
+}
+
+// sends the DTMF tones to a specific client connected to the session.
+func (s *Session) SendDTMFToClient(connectionID, digits string) error {
+	return s.SendDTMFToClientContext(context.Background(), connectionID, digits)
+}
+
+// SendDTMFToClientContext uses ctx for HTTP requests.
+func (s *Session) SendDTMFToClientContext(ctx context.Context, connectionID, digits string) error {
+	return s.OpenTok.SendDTMFToClientContext(ctx, s.SessionID, connectionID, digits)
 }

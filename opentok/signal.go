@@ -103,3 +103,23 @@ func (ot *OpenTok) SendConnectionSignalContext(ctx context.Context, sessionID, c
 
 	return nil
 }
+
+// SendSignal send signals to all participants.
+func (s *Session) SendSignal(data *SignalData) error {
+	return s.SendSignalContext(context.Background(), data)
+}
+
+// SendSignalContext uses ctx for HTTP requests.
+func (s *Session) SendSignalContext(ctx context.Context, data *SignalData) error {
+	return s.OpenTok.SendSessionSignalContext(ctx, s.SessionID, data)
+}
+
+// SendConnectionSignal send signals to a specific client.
+func (s *Session) SendConnectionSignal(connectionID string, data *SignalData) error {
+	return s.SendConnectionSignalContext(context.Background(), connectionID, data)
+}
+
+// SendConnectionSignalContext uses ctx for HTTP requests.
+func (s *Session) SendConnectionSignalContext(ctx context.Context, connectionID string, data *SignalData) error {
+	return s.OpenTok.SendConnectionSignalContext(ctx, s.SessionID, connectionID, data)
+}

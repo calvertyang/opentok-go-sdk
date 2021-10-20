@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httputil"
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v4"
@@ -51,6 +52,7 @@ type OpenTok struct {
 	apiKey    string
 	apiSecret string
 	apiHost   string
+	debug     bool
 
 	httpClient HTTPClient
 }
@@ -61,6 +63,7 @@ func New(apiKey, apiSecret string) *OpenTok {
 		apiKey:     apiKey,
 		apiSecret:  apiSecret,
 		apiHost:    defaultAPIHost,
+		debug:      false,
 		httpClient: http.DefaultClient,
 	}
 }
@@ -74,6 +77,12 @@ func (ot *OpenTok) SetAPIHost(url string) error {
 	ot.apiHost = url
 
 	return nil
+}
+
+// Debug sets the debug flage to true.
+// It will dump the request/response allows you easy to debug.
+func (ot *OpenTok) Debug() {
+	ot.debug = true
 }
 
 // SetHttpClient specifies http client, http.DefaultClient used by default.
@@ -124,9 +133,25 @@ func (ot *OpenTok) jwtToken(ist issueType) (string, error) {
 func (ot *OpenTok) sendRequest(req *http.Request, ctx context.Context) (*http.Response, error) {
 	req.Header.Add("User-Agent", userAgent)
 
+	// Dump request
+	if ot.debug {
+		fmt.Println("========== Request Begin ==========")
+		reqDump, _ := httputil.DumpRequest(req, true)
+		fmt.Println(string(reqDump))
+		fmt.Println("========== Request End ==========")
+	}
+
 	res, err := ot.httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
+	}
+
+	// Dump response
+	if ot.debug {
+		fmt.Println("========== Response Begin ==========")
+		resDump, _ := httputil.DumpResponse(res, true)
+		fmt.Println(string(resDump))
+		fmt.Println("========== Response End ==========")
 	}
 
 	return res, err

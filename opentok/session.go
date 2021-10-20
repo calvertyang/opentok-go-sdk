@@ -1,6 +1,7 @@
 package opentok
 
 import (
+	"bytes"
 	"context"
 	"crypto/hmac"
 	"crypto/sha1"
@@ -253,10 +254,113 @@ func (ot *OpenTok) GenerateToken(sessionID string, opts *TokenOptions) (string, 
 	return encodeToken(tokenData, ot)
 }
 
+// MuteSession force all streams (except for an optional list of streams)
+// in a session to mute published audio.
+func (ot *OpenTok) MuteSession(sessionID string, opts *MuteOptions) (*Project, error) {
+	return ot.MuteSessionContext(context.Background(), sessionID, opts)
+}
+
+// MuteSessionContext uses ctx for HTTP requests.
+func (ot *OpenTok) MuteSessionContext(ctx context.Context, sessionID string, opts *MuteOptions) (*Project, error) {
+	jsonStr, _ := json.Marshal(opts)
+
+	// Create jwt token
+	jwt, err := ot.genProjectJWT()
+	if err != nil {
+		return nil, err
+	}
+
+	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/session/" + sessionID + "/mute"
+	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("X-OPENTOK-AUTH", jwt)
+
+	res, err := ot.sendRequest(req, ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return nil, parseErrorResponse(res)
+	}
+
+	project := &Project{}
+	if err := json.NewDecoder(res.Body).Decode(project); err != nil {
+		return nil, err
+	}
+
+	return project, nil
+}
+
+// MuteStream force a publisher of a specific stream to mute its audio.
+func (ot *OpenTok) MuteStream(sessionID, streamID string) (*Project, error) {
+	return ot.MuteStreamContext(context.Background(), sessionID, streamID)
+}
+
+// MuteStreamContext uses ctx for HTTP requests.
+func (ot *OpenTok) MuteStreamContext(ctx context.Context, sessionID, streamID string) (*Project, error) {
+	// Create jwt token
+	jwt, err := ot.genProjectJWT()
+	if err != nil {
+		return nil, err
+	}
+
+	endpoint := ot.apiHost + projectURL + "/" + ot.apiKey + "/session/" + sessionID + "/stream/" + streamID + "/mute"
+	req, err := http.NewRequest(http.MethodPost, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("X-OPENTOK-AUTH", jwt)
+
+	res, err := ot.sendRequest(req, ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return nil, parseErrorResponse(res)
+	}
+
+	project := &Project{}
+	if err := json.NewDecoder(res.Body).Decode(project); err != nil {
+		return nil, err
+	}
+
+	return project, nil
+}
+
 // GenerateToken generates a token for each user connecting to an OpenTok
 // session.
 func (s *Session) GenerateToken(opts *TokenOptions) (string, error) {
 	return s.OpenTok.GenerateToken(s.SessionID, opts)
+}
+
+// MuteSession force all force all streams (except for an optional list of streams)
+// in a session to mute published audio.
+func (s *Session) Mute(opts *MuteOptions) (*Project, error) {
+	return s.MuteContext(context.Background(), opts)
+}
+
+// MuteContext uses ctx for HTTP requests.
+func (s *Session) MuteContext(ctx context.Context, opts *MuteOptions) (*Project, error) {
+	return s.OpenTok.MuteSessionContext(ctx, s.SessionID, opts)
+}
+
+// MuteStream force a publisher of a specific stream to mute its audio.
+func (s *Session) MuteStream(streamID string) (*Project, error) {
+	return s.MuteStreamContext(context.Background(), streamID)
+}
+
+// MuteStreamContext uses ctx for HTTP requests.
+func (s *Session) MuteStreamContext(ctx context.Context, streamID string) (*Project, error) {
+	return s.OpenTok.MuteStreamContext(ctx, s.SessionID, streamID)
 }
 
 // Decodes a sessionID into the metadata that it contains

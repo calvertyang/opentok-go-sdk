@@ -32,3 +32,17 @@ func ExampleOpenTok_Dial() {
 	// 	StreamID:     "f1a58131-7b2c-4fa8-b2a7-64fdc6b2c0f6",
 	// }
 }
+
+func ExampleOpenTok_SendDTMF() {
+	err := ot.SendDTMF("1_QX90NjQ2MCY0Nm6-MTU4QTO4NzE5NTkyOX4yUy2OZndKQExJR0NyalcvNktmTzBpSnp-QX4", "1713")
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func ExampleOpenTok_SendDTMFToClient() {
+	err := ot.SendDTMFToClient("1_QX90NjQ2MCY0Nm6-MTU4QTO4NzE5NTkyOX4yUy2OZndKQExJR0NyalcvNktmTzBpSnp-QX4", "3a6aa409-bfc5-462c-a9c7-59b72aeebf69", "1713")
+	if err != nil {
+		fmt.Println(err)
+	}
+}

@@ -21,7 +21,7 @@ const (
 var ot = New(apiKey, apiSecret)
 
 func TestNew(t *testing.T) {
-	expect := &OpenTok{apiKey, apiSecret, defaultAPIHost, http.DefaultClient}
+	expect := &OpenTok{apiKey, apiSecret, defaultAPIHost, false, http.DefaultClient}
 
 	actual := New(apiKey, apiSecret)
 
@@ -35,6 +35,12 @@ func TestOpenTok_SetAPIHost(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, newAPIHost, ot.apiHost)
+}
+
+func TestOpenTok_Debug(t *testing.T) {
+	ot.Debug()
+	assert.Equal(t, true, ot.debug)
+	ot.debug = false
 }
 
 func TestOpenTok_SetHttpClient(t *testing.T) {
