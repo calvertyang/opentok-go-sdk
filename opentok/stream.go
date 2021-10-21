@@ -74,7 +74,7 @@ func (ot *OpenTok) ListStreamsContext(ctx context.Context, sessionID string) (*S
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (ot *OpenTok) GetStreamContext(ctx context.Context, sessionID, streamID str
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func (ot *OpenTok) SetStreamClassListsContext(ctx context.Context, sessionID str
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}

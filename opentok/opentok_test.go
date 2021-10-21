@@ -43,12 +43,12 @@ func TestOpenTok_Debug(t *testing.T) {
 	ot.debug = false
 }
 
-func TestOpenTok_SetHttpClient(t *testing.T) {
+func TestOpenTok_SetHTTPClient(t *testing.T) {
 	httpClient := &http.Client{
 		Timeout: 120 * time.Second,
 	}
 
-	ot.SetHttpClient(httpClient)
+	ot.SetHTTPClient(httpClient)
 
 	assert.Equal(t, httpClient, ot.httpClient)
 }
@@ -99,7 +99,7 @@ func TestOpenTok_SendRequest(t *testing.T) {
 	ot.SetAPIHost(ts.URL)
 
 	req, _ := http.NewRequest(http.MethodGet, ot.apiHost, nil)
-	res, err := ot.sendRequest(req, context.Background())
+	res, err := ot.sendRequest(context.Background(), req)
 
 	assert.Nil(t, err)
 	assert.IsType(t, &http.Response{}, res)
@@ -117,7 +117,7 @@ func TestOpenTok_ParseErrorResponse(t *testing.T) {
 		`)),
 	}
 
-	expect := &OpenTokResponseError{
+	expect := &ResponseError{
 		StatusCode: 400,
 		Message:    "Invalid session id format",
 	}

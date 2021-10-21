@@ -178,7 +178,7 @@ func (ot *OpenTok) StartBroadcastContext(ctx context.Context, sessionID string, 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +224,7 @@ func (ot *OpenTok) StopBroadcastContext(ctx context.Context, broadcastID string)
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -283,7 +283,7 @@ func (ot *OpenTok) ListBroadcastsContext(ctx context.Context, opts *BroadcastLis
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -330,7 +330,7 @@ func (ot *OpenTok) GetBroadcastContext(ctx context.Context, broadcastID string) 
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -393,7 +393,7 @@ func (ot *OpenTok) SetBroadcastLayoutContext(ctx context.Context, broadcastID st
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}

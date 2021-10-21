@@ -122,7 +122,7 @@ type SessionIDInfo struct {
 	CreateTime time.Time
 }
 
-//
+// MuteOptions defines the options for mute published audio.
 type MuteOptions struct {
 	// Active specifies whether streams published after this call, in addition to
 	// the current streams in the session, should be muted (true) or not (false).
@@ -168,7 +168,7 @@ func (ot *OpenTok) CreateSessionContext(ctx context.Context, opts *SessionOption
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -279,7 +279,7 @@ func (ot *OpenTok) MuteSessionContext(ctx context.Context, sessionID string, opt
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +318,7 @@ func (ot *OpenTok) MuteStreamContext(ctx context.Context, sessionID, streamID st
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -342,7 +342,7 @@ func (s *Session) GenerateToken(opts *TokenOptions) (string, error) {
 	return s.OpenTok.GenerateToken(s.SessionID, opts)
 }
 
-// MuteSession force all force all streams (except for an optional list of streams)
+// Mute force all force all streams (except for an optional list of streams)
 // in a session to mute published audio.
 func (s *Session) Mute(opts *MuteOptions) (*Project, error) {
 	return s.MuteContext(context.Background(), opts)

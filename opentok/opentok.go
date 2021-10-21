@@ -33,8 +33,8 @@ type HTTPClient interface {
 	Do(r *http.Request) (*http.Response, error)
 }
 
-// OpenTokResponseError encloses an error with code and message.
-type OpenTokResponseError struct {
+// ResponseError encloses an error with code and message.
+type ResponseError struct {
 	// StatusCode is the HTTP Response StatusCode that led to the error.
 	StatusCode int
 
@@ -43,7 +43,7 @@ type OpenTokResponseError struct {
 }
 
 // Error returns a formatted error message.
-func (e *OpenTokResponseError) Error() string {
+func (e *ResponseError) Error() string {
 	return fmt.Sprintf("TokBox error: code: %d; message: %s", e.StatusCode, e.Message)
 }
 
@@ -85,8 +85,8 @@ func (ot *OpenTok) Debug() {
 	ot.debug = true
 }
 
-// SetHttpClient specifies http client, http.DefaultClient used by default.
-func (ot *OpenTok) SetHttpClient(client HTTPClient) {
+// SetHTTPClient specifies http client, http.DefaultClient used by default.
+func (ot *OpenTok) SetHTTPClient(client HTTPClient) {
 	if client != nil {
 		ot.httpClient = client
 	}
@@ -130,7 +130,7 @@ func (ot *OpenTok) jwtToken(ist issueType) (string, error) {
 }
 
 // Send HTTP request.
-func (ot *OpenTok) sendRequest(req *http.Request, ctx context.Context) (*http.Response, error) {
+func (ot *OpenTok) sendRequest(ctx context.Context, req *http.Request) (*http.Response, error) {
 	req.Header.Add("User-Agent", userAgent)
 
 	// Dump request
@@ -159,7 +159,7 @@ func (ot *OpenTok) sendRequest(req *http.Request, ctx context.Context) (*http.Re
 
 // Parse the error rresponse by custom error struct.
 func parseErrorResponse(res *http.Response) error {
-	resErr := &OpenTokResponseError{}
+	resErr := &ResponseError{}
 	if err := json.NewDecoder(res.Body).Decode(resErr); err != nil {
 		return fmt.Errorf("Error decoding response from Tokbox: statusCode: %d; %w", res.StatusCode, err)
 	}

@@ -117,7 +117,7 @@ func (ot *OpenTok) DialContext(ctx context.Context, sessionID string, opts *Dial
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func (ot *OpenTok) SendDTMFContext(ctx context.Context, sessionID, digits string
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func (ot *OpenTok) SendDTMFContext(ctx context.Context, sessionID, digits string
 	return nil
 }
 
-// sends the DTMF tones to a specific client connected to the session.
+// SendDTMFToClient sends the DTMF tones to a specific client connected to the session.
 func (ot *OpenTok) SendDTMFToClient(sessionID, connectionID, digits string) error {
 	return ot.SendDTMFToClientContext(context.Background(), sessionID, connectionID, digits)
 }
@@ -226,7 +226,7 @@ func (ot *OpenTok) SendDTMFToClientContext(ctx context.Context, sessionID, conne
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -259,7 +259,7 @@ func (s *Session) SendDTMFContext(ctx context.Context, digits string) error {
 	return s.OpenTok.SendDTMFContext(ctx, s.SessionID, digits)
 }
 
-// sends the DTMF tones to a specific client connected to the session.
+// SendDTMFToClient sends the DTMF tones to a specific client connected to the session.
 func (s *Session) SendDTMFToClient(connectionID, digits string) error {
 	return s.SendDTMFToClientContext(context.Background(), connectionID, digits)
 }

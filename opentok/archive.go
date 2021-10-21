@@ -303,7 +303,7 @@ func (ot *OpenTok) StartArchiveContext(ctx context.Context, sessionID string, op
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -352,7 +352,7 @@ func (ot *OpenTok) StopArchiveContext(ctx context.Context, archiveID string) (*A
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -410,7 +410,7 @@ func (ot *OpenTok) ListArchivesContext(ctx context.Context, opts *ArchiveListOpt
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -457,7 +457,7 @@ func (ot *OpenTok) GetArchiveContext(ctx context.Context, archiveID string) (*Ar
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -502,7 +502,7 @@ func (ot *OpenTok) DeleteArchiveContext(ctx context.Context, archiveID string) e
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -573,7 +573,7 @@ func (ot *OpenTok) SetArchiveStorageContext(ctx context.Context, opts *StorageOp
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -612,7 +612,7 @@ func (ot *OpenTok) DeleteArchiveStorageContext(ctx context.Context) error {
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -668,7 +668,7 @@ func (ot *OpenTok) SetArchiveLayoutContext(ctx context.Context, archiveID string
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}

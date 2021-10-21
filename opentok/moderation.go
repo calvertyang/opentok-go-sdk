@@ -35,7 +35,7 @@ func (ot *OpenTok) ForceDisconnectContext(ctx context.Context, sessionID, connec
 
 	req.Header.Add("X-OPENTOK-AUTH", jwt)
 
-	res, err := ot.sendRequest(req, ctx)
+	res, err := ot.sendRequest(ctx, req)
 	if err != nil {
 		return err
 	}
