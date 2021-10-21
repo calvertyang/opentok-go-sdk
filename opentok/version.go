@@ -9,7 +9,7 @@ import (
 const sdkName = "opentok-go-sdk"
 
 // sdkVersion specifies the version of the SDK
-const sdkVersion = "2.3.0"
+const sdkVersion = "2.3.1"
 
 var (
 	userAgent = fmt.Sprintf("Go/%s (%s-%s) %s/%s",
