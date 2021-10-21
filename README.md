@@ -23,13 +23,13 @@ For usage and more information, please refer to [GoDoc](https://pkg.go.dev/githu
 Use `go get` to retrieve the SDK to add it to your GOPATH workspace, or project's Go module dependencies.
 
 ```
-go get github.com/calvertyang/opentok-go-sdk
+go get github.com/calvertyang/opentok-go-sdk/v2
 ```
 
 To update the SDK use `go get -u` to retrieve the latest version of the SDK.
 
 ```
-go get -u github.com/calvertyang/opentok-go-sdk
+go get -u github.com/calvertyang/opentok-go-sdk/v2
 ```
 
 ## Usage
@@ -37,7 +37,7 @@ go get -u github.com/calvertyang/opentok-go-sdk
 ### Initializing
 
 ```go
-import "github.com/calvertyang/opentok-go-sdk/opentok"
+import "github.com/calvertyang/opentok-go-sdk/v2/opentok"
 
 ot := opentok.New(apiKey, apiSecret)
 ```
