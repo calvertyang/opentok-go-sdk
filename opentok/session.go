@@ -207,12 +207,11 @@ func (ot *OpenTok) GenerateToken(sessionID string, opts *TokenOptions) (string, 
 
 	// create tokenData with given opts
 	now := time.Now().UTC()
-	rand.Seed(time.Now().UTC().UnixNano())
 	tokenData := map[string]string{
 		"session_id":                sessionID,
 		"create_time":               strconv.FormatInt(now.Unix(), 10),
 		"expire_time":               strconv.FormatInt(now.Add(24*time.Hour).Unix(), 10),
-		"nonce":                     fmt.Sprintf("%v", rand.Float64()),
+		"nonce":                     strconv.FormatInt(int64(rand.Uint32()), 10),
 		"role":                      string(Publisher),
 		"connection_data":           "",
 		"initial_layout_class_list": "",
