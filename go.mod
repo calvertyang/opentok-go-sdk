@@ -1,4 +1,4 @@
-module github.com/calvertyang/opentok-go-sdk/v2
+module github.com/MYM-Tech/opentok-go-sdk/v2
 
 go 1.13
 

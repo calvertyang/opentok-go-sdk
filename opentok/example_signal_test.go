@@ -3,7 +3,7 @@ package opentok_test
 import (
 	"fmt"
 
-	"github.com/calvertyang/opentok-go-sdk/v2/opentok"
+	"github.com/MYM-Tech/opentok-go-sdk/v2/opentok"
 )
 
 func ExampleOpenTok_SendSessionSignal() {

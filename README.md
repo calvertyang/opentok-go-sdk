@@ -1,10 +1,10 @@
 # OpenTok Go SDK
 
-[![API Reference](https://godoc.org/github.com/calvertyang/opentok-go-sdk?status.svg)](https://pkg.go.dev/github.com/calvertyang/opentok-go-sdk/v2)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/calvertyang/opentok-go-sdk)](https://github.com/calvertyang/opentok-go-sdk/releases/latest)
-[![Build](https://github.com/calvertyang/opentok-go-sdk/workflows/CI/badge.svg)](https://github.com/calvertyang/opentok-go-sdk/actions/workflows/ci.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/calvertyang/opentok-go-sdk)](https://goreportcard.com/report/github.com/calvertyang/opentok-go-sdk)
-[![license](https://img.shields.io/github/license/calvertyang/opentok-go-sdk.svg)](https://github.com/calvertyang/opentok-go-sdk/blob/master/LICENSE)
+[![API Reference](https://godoc.org/github.com/MYM-Tech/opentok-go-sdk?status.svg)](https://pkg.go.dev/github.com/MYM-Tech/opentok-go-sdk/v2)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/calvertyang/opentok-go-sdk)](https://github.com/MYM-Tech/opentok-go-sdk/releases/latest)
+[![Build](https://github.com/MYM-Tech/opentok-go-sdk/workflows/CI/badge.svg)](https://github.com/MYM-Tech/opentok-go-sdk/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/MYM-Tech/opentok-go-sdk)](https://goreportcard.com/report/github.com/MYM-Tech/opentok-go-sdk)
+[![license](https://img.shields.io/github/license/calvertyang/opentok-go-sdk.svg)](https://github.com/MYM-Tech/opentok-go-sdk/blob/master/LICENSE)
 
 The OpenTok Go SDK lets you generate
 [sessions](https://tokbox.com/developer/guides/create-session/) and
@@ -16,20 +16,20 @@ broadcasts](https://tokbox.com/developer/guides/broadcast/live-streaming/),
 working with OpenTok [SIP interconnect](https://tokbox.com/developer/guides/sip)
 and [disconnecting clients from sessions](https://tokbox.com/developer/guides/moderation/rest/).
 
-For usage and more information, please refer to [GoDoc](https://pkg.go.dev/github.com/calvertyang/opentok-go-sdk/v2).
+For usage and more information, please refer to [GoDoc](https://pkg.go.dev/github.com/MYM-Tech/opentok-go-sdk/v2).
 
 ## Installing
 
 Use `go get` to retrieve the SDK to add it to your GOPATH workspace, or project's Go module dependencies.
 
 ```
-go get github.com/calvertyang/opentok-go-sdk/v2
+go get github.com/MYM-Tech/opentok-go-sdk/v2
 ```
 
 To update the SDK use `go get -u` to retrieve the latest version of the SDK.
 
 ```
-go get -u github.com/calvertyang/opentok-go-sdk/v2
+go get -u github.com/MYM-Tech/opentok-go-sdk/v2
 ```
 
 ## Usage
@@ -37,7 +37,7 @@ go get -u github.com/calvertyang/opentok-go-sdk/v2
 ### Initializing
 
 ```go
-import "github.com/calvertyang/opentok-go-sdk/v2/opentok"
+import "github.com/MYM-Tech/opentok-go-sdk/v2/opentok"
 
 ot := opentok.New(apiKey, apiSecret)
 ```
@@ -85,6 +85,7 @@ session, err := ot.CreateSession(&opentok.SessionOptions{
 session, err := ot.CreateSession(&opentok.SessionOptions{
 	ArchiveMode: opentok.AutoArchived,
 	MediaMode:   opentok.Routed,
+	ArchiveName: "archive name",
 })
 ```
 
@@ -491,5 +492,5 @@ The OpenTok Go SDK requires Go 1.12 or higher. It may work on older versions but
 
 ## Release Notes
 
-See the [Releases](https://github.com/calvertyang/opentok-go-sdk/releases) page for details
+See the [Releases](https://github.com/MYM-Tech/opentok-go-sdk/releases) page for details
 about each release.

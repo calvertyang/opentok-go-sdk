@@ -49,6 +49,14 @@ type SessionOptions struct {
 	// session by calling the REST /archive POST method.
 	ArchiveMode ArchiveMode
 
+	// The name to use for archives in auto-archived sessions. When setting
+	//this option, the archiveMode option must be set to always or an error
+	//will result. The length of the archive name can be up to 80 chars. Due
+	//to encoding limitations the following special characters are translated
+	//to a colon (:) character: ~, -, _. If you do not set a name and the archiveMode
+	//option is set to always, the archive name will be empty.
+	ArchiveName string
+
 	// The IP address that TokBox will use to situate the session in its global
 	// network.
 	Location string
@@ -143,6 +151,10 @@ func (ot *OpenTok) CreateSessionContext(ctx context.Context, opts *SessionOption
 
 	if opts.ArchiveMode != "" {
 		params.Add("archiveMode", string(opts.ArchiveMode))
+	}
+
+	if opts.ArchiveName != "" {
+		params.Add("archiveName", opts.ArchiveName)
 	}
 
 	if opts.Location != "" {
